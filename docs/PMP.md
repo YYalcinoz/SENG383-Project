@@ -21,7 +21,7 @@
 **Jira project key:** HLX  
 **Jira board link:** https://teamhelix.atlassian.net/jira/software/projects/HLX/boards/1  
 
-The Jira space uses the Scrum template with the board columns To Do → In Progress → In Review → Done. A task is moved to Done only when its pull request is merged into `main`. The space has 14 epics (PMP-1 … PMP-6 and M1 … M8) and is connected to the GitHub repository through the GitHub for Atlassian app, so commits, branches and pull requests that start with a Jira key (e.g. `HLX-12`) appear under the related work item.
+The Jira space uses the Scrum template with the board columns To Do → In Progress → In Review → Done. A task is moved to Done only when its pull request is merged into `main`. The space has 16 epics: PMP-1 … PMP-6, M1 … M8, and SRS and DESIGN for the requirements and design documents. It is connected to the GitHub repository through the GitHub for Atlassian app, so commits, branches and pull requests that start with a Jira key (e.g. `HLX-12`) appear under the related work item.
 
 ### Team and Roles
 
@@ -37,29 +37,42 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 
 ### Work Packages (Epics)
 
-> One row per Jira epic. Number of tasks = how many tasks you created under that epic.
-
 | Epic | Owner | Number of tasks | Planned sprint(s) |
 |---|---|---|---|
-| M1 | | | |
-| M2 | | | |
-| M3 | | | |
-| M4 | | | |
-| M5 | | | |
-| M6 | | | |
-| M7 | | | |
-| M8 | | | |
+| PMP-1 | Yağız Yalçınöz | 5 | Sprint 1 |
+| PMP-2 | Yağız Yalçınöz | 1 | Sprint 2 |
+| PMP-3 | Yağız Yalçınöz | 0 | Sprint 4 |
+| PMP-4 | Yağız Yalçınöz | 0 | Sprint 5 |
+| PMP-5 | Yağız Yalçınöz | 0 | Sprint 7 |
+| PMP-6 | Yağız Yalçınöz | 0 | Sprint 8 |
+| M1 | Yağız Yalçınöz | 5 | Sprint 2 (walking skeleton), Sprints 3–4 |
+| M2 | Yağız Yalçınöz | 0 | Sprints 4–5 |
+| M3 | Zeynep Dila Tetik | 0 | Sprints 4–5 |
+| M4 | Kerem Alp Ustaoğlu | 0 | Sprints 4–5 |
+| M5 | Zeynep Dila Tetik | 0 | Sprints 5–6 |
+| M6 | Yağız Yalçınöz | 0 | Sprints 5–6 |
+| M7 | Kerem Alp Ustaoğlu | 0 | Sprints 6–7 |
+| M8 | Zeynep Dila Tetik | 0 | Sprints 5–7 |
+| SRS | Kerem Alp Ustaoğlu | 4 | Sprint 2 (first version), Sprint 7 (final) |
+| DESIGN | Kerem Alp Ustaoğlu | 4 | Sprint 2 (first version), Sprint 7 (final) |
+
+Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner builds the module's screens, API, data and tests, and creates the module's tasks at the start of the sprints in which the module is planned; the task counts above will grow accordingly.
 
 ### Sprint Plan
 
-> One row per Jira sprint. Align sprints with the weekly schedule.
+We use one-week sprints (Monday–Sunday) that follow the weekly course schedule.
 
 | Sprint | Weeks | Sprint goal | Ends with |
 |---|---|---|---|
-| Sprint 1 | | | Walking skeleton (v0.0), Week 6 |
-| Sprint 2 | | | Release v0.1, mid-term |
-| Sprint 3 | | | Release v0.2, Week 10 |
-| Sprint 4 | | | Release v1.0, final |
+| Sprint 1 | Week 4 (19–25 Oct) | Repository, CI, Jira setup and PMP-1 | PMP-1 |
+| Sprint 2 | Week 5 (26 Oct–1 Nov) | Walking skeleton (v0.0), SRS and SDD first version, PMP-2 | Walking skeleton (v0.0), Week 6 class |
+| Sprint 3 | Week 6 (2–8 Nov) | M1 login and roles | M1 in progress |
+| Sprint 4 | Week 7 (9–15 Nov) | M1 complete; M2, M3, M4 in progress; PMP-3 | M1 complete |
+| Sprint 5 | Week 8 (16–22 Nov) | M2, M3, M4 complete; first end-to-end test in CI; PMP-4 | Release v0.1 |
+| Sprint 6 | Week 9 (23–29 Nov) | Mid-term demo; M5, M6 complete; M8 mock mode | Mid-term evaluation (Week 9) |
+| Sprint 7 | Week 10 (30 Nov–6 Dec) | M7, M8 complete; e2e tests for 3 critical flows; SRS and SDD final; PMP-5 | Release v0.2 |
+| Sprint 8 | Week 11 (7–13 Dec) | Bug fixes, an e2e test for each module, coverage ≥ 60%; PMP-6 | Release v1.0 |
+| Sprint 9 | Week 12 (14–20 Dec) | Final presentation and live demo; final report | Final evaluation (Week 12) |
 
 ---
 
