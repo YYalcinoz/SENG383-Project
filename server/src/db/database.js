@@ -1,8 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Veritabanı dosyasının proje kök dizininde oluşması için yol tanımı
-const dbPath = path.resolve(__dirname, '../../../database.db');
+// Veritabanı yolunu process.env.DB_PATH üzerinden veya server/ klasöründe olacak şekilde ayarladık
+const dbPath = process.env.DB_PATH || path.resolve(__dirname, '../../database.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
@@ -12,13 +12,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// İlk tablolarımızı oluşturalım
+// İlk tablolarımızı oluşturalım (roller: parent, specialist, child)
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    role TEXT NOT NULL
+    role TEXT NOT NULL CHECK(role IN ('parent', 'specialist', 'child'))
   )`);
 });
 

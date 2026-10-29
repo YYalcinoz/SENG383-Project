@@ -1,9 +1,9 @@
 const db = require('../src/db/database');
 
 const sampleUsers = [
-  { name: 'Ayşe Yılmaz', email: 'ayse@example.com', role: 'Admin' },
-  { name: 'Mehmet Demir', email: 'mehmet@example.com', role: 'User' },
-  { name: 'Zeynep Kaya', email: 'zeynep@example.com', role: 'User' }
+  { name: 'Ayşe Yılmaz', email: 'ayse@example.com', role: 'parent' },
+  { name: 'Mehmet Demir', email: 'mehmet@example.com', role: 'specialist' },
+  { name: 'Zeynep Kaya', email: 'zeynep@example.com', role: 'child' }
 ];
 
 db.serialize(() => {
