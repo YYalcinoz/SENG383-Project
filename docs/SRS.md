@@ -103,10 +103,11 @@
 
 | ID | Category | Requirement |
 |---|---|---|
-| NFR-01 | Performance | e.g., Pages load in under 2 seconds. |
-| NFR-02 | Security | e.g., Passwords are stored hashed. |
-| NFR-03 | Usability | |
-| NFR-04 | | |
+| NFR-01 | Security | Passwords are stored only as bcrypt hashes; plain-text passwords are never stored or logged. |
+| NFR-02 | Security | Every API request about a child is authorized on the server: requests without a valid JWT return 401, and requests outside the user's permissions return 403. |
+| NFR-03 | Privacy | The system uses only synthetic data created by the seed script, and the AI module receives only data the requesting user is allowed to see. |
+| NFR-04 | Installability | The application can be installed and run locally from a clean clone by following the README, using only `npm install`, `npm run seed` and `npm start`. |
+| NFR-05 | Maintainability | All tests run in CI on every pull request; branch coverage is at least 40% at v0.2 and 60% at v1.0. |
 
 ---
 
@@ -117,9 +118,9 @@
 
 | Flow | Related requirements | Acceptance criteria |
 |---|---|---|
-| Flow 1: | FR-… | **Given** … **When** … **Then** … |
-| Flow 2: | FR-… | **Given** … **When** … **Then** … |
-| Flow 3: | FR-… | **Given** … **When** … **Then** … |
+| Flow 1: Linking a specialist | FR-M1-01, FR-M2-01, FR-M2-03, FR-M2-04, FR-M2-08 | **Given** a logged-in parent and a registered specialist **When** the parent links the specialist by email and type **Then** the specialist appears in the child's specialist list and can open the child's records; after the parent unlinks the specialist, the specialist's requests about the child return an error. |
+| Flow 2: Assigning and completing a task | FR-M4 (to be linked) | **Given** a specialist linked to a child **When** the specialist assigns a task and the child marks it as done **Then** the specialist sees the task as done. |
+| Flow 3: Weekly AI summary | FR-M5, FR-M8 (to be linked) | **Given** specialist entries for the selected week **When** the parent opens the weekly summary **Then** a summary labelled "AI-generated" is shown with links to its source records. |
 
 ---
 
@@ -135,3 +136,4 @@
 |---|---|---|
 | 2026-10-25 | Template added | Yağız Yalçınöz |
 | 2026-10-28 | M1, M2 and M6 requirements added | Yağız Yalçınöz |
+| 2026-10-30 | Non-functional requirements and critical flows added | Yağız Yalçınöz |
