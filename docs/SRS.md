@@ -32,14 +32,27 @@
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M1-01 | The system shall … | Must |
-| FR-M1-02 | | |
+| FR-M1-01 | The system shall let a registered user log in with email and password. | Must |
+| FR-M1-02 | The system shall show an error and not log the user in when the email or password is wrong. | Must |
+| FR-M1-03 | The system shall issue a JWT on successful login and require a valid JWT on every protected API request. | Must |
+| FR-M1-04 | The system shall take the user's role (parent, specialist or child) from the account; the user shall not choose a role at login. | Must |
+| FR-M1-05 | The system shall show each role only its own screens. | Must |
+| FR-M1-06 | The system shall reject API requests outside the user's role permissions. | Must |
+| FR-M1-07 | The system shall let a child see only their own tasks and schedule. | Must |
+| FR-M1-08 | The system shall let a logged-in user log out. | Should |
 
 ### M2 – Linking specialists
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M2-01 | | |
+| FR-M2-01 | The system shall let a parent link a registered specialist to their child by entering the specialist's email and type (teacher, psychologist, doctor, special education teacher or coach). | Must |
+| FR-M2-02 | The system shall show an error when the entered email does not belong to a registered specialist. | Must |
+| FR-M2-03 | The system shall list the specialists linked to the child, with their name and type. | Must |
+| FR-M2-04 | The system shall let a parent unlink a specialist after a confirmation step. | Must |
+| FR-M2-05 | The system shall allow only the child's parent to link or unlink specialists. | Must |
+| FR-M2-06 | The system shall show a specialist the list of children they are linked to. | Must |
+| FR-M2-07 | The system shall give a linked specialist access to all of the child's records. | Must |
+| FR-M2-08 | The system shall reject in the API every request about a child from a specialist who is not linked to that child, including a specialist who has been unlinked but still holds a valid JWT. | Must |
 
 ### M3 – Weekly schedule
 
@@ -63,7 +76,12 @@
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M6-01 | | |
+| FR-M6-01 | The system shall let the parent and linked specialists upload a document for the child. | Must |
+| FR-M6-02 | The system shall accept only PDF and image files and reject other file types. | Must |
+| FR-M6-03 | The system shall list the child's documents with name, type, uploader and upload date. | Must |
+| FR-M6-04 | The system shall let the parent and linked specialists view and download the child's documents. | Must |
+| FR-M6-05 | The system shall not show documents to the child, in the interface or through the API. | Must |
+| FR-M6-06 | The system shall reject uploads larger than 10 MB. | Should |
 
 ### M7 – Weekly statistics
 
@@ -116,3 +134,4 @@
 | Date | Change | By |
 |---|---|---|
 | 2026-10-25 | Template added | Yağız Yalçınöz |
+| 2026-10-28 | M1, M2 and M6 requirements added | Yağız Yalçınöz |
