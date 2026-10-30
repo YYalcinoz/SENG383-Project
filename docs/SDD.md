@@ -39,14 +39,26 @@ flowchart LR
 
 | Module | Main components | Implements requirements |
 |---|---|---|
-| M1 – Login and roles | | FR-M1-01, … |
-| M2 – Linking specialists | | |
+| M1 – Login and roles | Backend: `routes/auth.js` (login, current user), `middleware/auth.js` (`authenticate`, `requireRole`), bcryptjs for password hashing, jsonwebtoken. Frontend: `LoginPage`, `AuthContext` (keeps the token and the current user), `ProtectedRoute` (role-based routing) | FR-M1-01 … FR-M1-08 |
+| M2 – Linking specialists | Backend: `routes/children.js` (children of the current user), `routes/specialists.js` (link, list, unlink), `middleware/childAccess.js` (`requireChildAccess`). Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist) | FR-M2-01 … FR-M2-08 |
 | M3 – Weekly schedule | | |
 | M4 – Tasks | | |
 | M5 – Specialist entries | | |
-| M6 – Documents | | |
+| M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
 | M7 – Weekly statistics | | |
 | M8 – Role-based AI summary | | |
+
+### Access control
+
+Every protected request passes through three middleware functions:
+
+1. `authenticate` verifies the JWT and puts the user (id, role) on the request; a missing or invalid token returns 401.
+2. `requireRole(...roles)` returns 403 if the user's role is not allowed for the endpoint.
+3. `requireChildAccess` checks, on every request and against the database, that the user may access the child in the URL: a parent must be the child's parent, a specialist must have a row in `specialist_links`, and a child may only access their own data. Because the link is checked in the database and not in the token, an unlinked specialist is rejected even while their JWT is still valid (FR-M2-08).
+
+All child-related endpoints use the prefix `/api/children/:childId/...`, so the same check applies to every module.
+
+The JWT is signed with `JWT_SECRET` from `.env`, expires after 2 hours and is kept in the browser's localStorage. localStorage is readable by JavaScript, so an XSS bug could expose the token; we accept this for simplicity and reduce the risk by relying on React's default escaping (no `dangerouslySetInnerHTML`) and the short expiry.
 
 ---
 
@@ -56,16 +68,41 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    USER ||--o{ ORDER : places
-    USER {
-        int id
+    USERS ||--o{ USERS : "parent of"
+    USERS ||--o{ SPECIALIST_LINKS : "child"
+    USERS ||--o{ SPECIALIST_LINKS : "specialist"
+    USERS ||--o{ DOCUMENTS : "child"
+    USERS ||--o{ DOCUMENTS : "uploaded by"
+    USERS {
+        int id PK
         string name
+        string email UK
+        string password_hash
+        string role "parent, specialist or child"
+        int parent_id FK "set only for children"
     }
-    ORDER {
-        int id
-        date created_at
+    SPECIALIST_LINKS {
+        int id PK
+        int child_id FK
+        int specialist_id FK
+        string specialist_type "teacher, psychologist, doctor, special education teacher or coach"
+        datetime created_at
+    }
+    DOCUMENTS {
+        int id PK
+        int child_id FK
+        int uploader_id FK
+        string original_name
+        string stored_name "random name on disk"
+        string mime_type
+        int size_bytes
+        datetime uploaded_at
     }
 ```
+
+- A child is a user with the role `child`; `parent_id` links the child to their parent. A parent can have more than one child, and each child has one parent.
+- `(child_id, specialist_id)` is unique in `specialist_links`, so a specialist cannot be linked to the same child twice. Unlinking deletes the row.
+- Uploaded files are stored on disk under a random name, so user-supplied file names are never used as paths.
 
 ---
 
@@ -75,8 +112,15 @@ erDiagram
 
 | Method | Endpoint | Description | Module |
 |---|---|---|---|
-| GET | | | |
-| POST | | | |
+| POST | `/api/auth/login` | Log in with email and password, returns a JWT and the user | M1 |
+| GET | `/api/auth/me` | Current user (id, name, role) | M1 |
+| GET | `/api/children` | Children of the current parent, or children linked to the current specialist | M2 |
+| GET | `/api/children/:childId/specialists` | List specialists linked to the child | M2 |
+| POST | `/api/children/:childId/specialists` | Link a specialist by email and type (parent only) | M2 |
+| DELETE | `/api/children/:childId/specialists/:specialistId` | Unlink a specialist (parent only) | M2 |
+| GET | `/api/children/:childId/documents` | List the child's documents | M6 |
+| POST | `/api/children/:childId/documents` | Upload a PDF or image (max 10 MB) | M6 |
+| GET | `/api/children/:childId/documents/:documentId/download` | Download a document | M6 |
 
 ---
 
@@ -118,3 +162,4 @@ sequenceDiagram
 | Date | Change | By |
 |---|---|---|
 | 2026-10-25 | Template added | Yağız Yalçınöz |
+| 2026-10-29 | M1, M2 and M6 design, data model and access control added | Yağız Yalçınöz |
