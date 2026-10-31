@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-10-25
+**Last updated:** 2026-10-31
 
 > Keep this file at `docs/SRS.md`. Keep it short and specific: every requirement should be testable.
 > Requirement IDs are used in Jira tasks, commits and tests, so do not renumber them once created.
@@ -64,7 +64,15 @@
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M4-01 | | |
+| FR-M4-01 | The system shall let a parent or a linked specialist assign a task to the child by entering a title, a description, a development area (motor, language, cognitive, social-emotional or self-care) and a due date. | Must |
+| FR-M4-02 | The system shall reject a new task and show an error when the title, development area or due date is missing, or when the development area is not one of the listed values. | Must |
+| FR-M4-03 | The system shall give every new task the status "To do". | Must |
+| FR-M4-04 | The system shall let the child see their own tasks with title, description, development area, due date and status. | Must |
+| FR-M4-05 | The system shall let the child mark one of their own tasks as done. | Must |
+| FR-M4-06 | The system shall allow only the child to mark a task as done; the API shall reject this request from a parent or a specialist. | Must |
+| FR-M4-07 | The system shall show the parent and every linked specialist all of the child's tasks, each with its title, development area, due date, status and the name of the person who assigned it. | Must |
+| FR-M4-08 | The system shall not let a child assign tasks, and shall reject API requests about the tasks of another child. | Must |
+| FR-M4-09 | The system shall mark a task that is not done and is past its due date as "Overdue". | Could |
 
 ### M5 – Specialist entries
 
@@ -87,7 +95,14 @@
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-M7-01 | | |
+| FR-M7-01 | The system shall let a parent or a linked specialist select a week (Monday to Sunday) and shall show the task completion rate for that week. | Must |
+| FR-M7-02 | The system shall calculate the completion rate as the number of tasks marked done divided by the number of tasks whose due date falls in the selected week, as a whole-number percentage. | Must |
+| FR-M7-03 | The system shall show the same completion rate, with the done and total task counts, for each development area. | Must |
+| FR-M7-04 | The system shall show "no tasks this week" instead of a percentage when no task is due in the selected week. | Must |
+| FR-M7-05 | The system shall show the current week when the statistics page is first opened. | Should |
+| FR-M7-06 | The system shall not show statistics to the child, and shall reject in the API statistics requests from a child or from a specialist who is not linked to the child. | Must |
+
+Example: if 4 tasks are due in the week and 3 are done, the completion rate is 75%.
 
 ### M8 – Role-based AI summary
 
@@ -137,3 +152,4 @@
 | 2026-10-25 | Template added | Yağız Yalçınöz |
 | 2026-10-28 | M1, M2 and M6 requirements added | Yağız Yalçınöz |
 | 2026-10-30 | Non-functional requirements and critical flows added | Yağız Yalçınöz |
+| 2026-10-31 | M4 and M7 requirements added | Kerem Alp Ustaoğlu |
