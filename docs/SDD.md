@@ -46,7 +46,7 @@ flowchart LR
 | M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
 | M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
 | M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), a helper that turns any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
-| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests. Frontend: `SummaryPage` | FR-M8-01 … FR-M8-09 |
+| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests. Frontend: `SummaryPage` | FR-M8-01 … FR-M8-10 |
 
 ### Access control
 
@@ -234,4 +234,4 @@ sequenceDiagram
 | 2026-10-25 | Template added | Yağız Yalçınöz |
 | 2026-10-29 | M1, M2 and M6 design, data model and access control added | Yağız Yalçınöz |
 | 2026-10-31 | M4 and M7 design, task data model and API endpoints added | Kerem Alp Ustaoğlu |
-| 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila |
+| 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila Tetik |
