@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-10-25
+**Last updated:** 2026-10-31
 
 > Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
 > Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
@@ -42,10 +42,10 @@ flowchart LR
 | M1 – Login and roles | Backend: `routes/auth.js` (login, current user), `middleware/auth.js` (`authenticate`, `requireRole`), bcryptjs for password hashing, jsonwebtoken. Frontend: `LoginPage`, `AuthContext` (keeps the token and the current user), `ProtectedRoute` (role-based routing) | FR-M1-01 … FR-M1-08 |
 | M2 – Linking specialists | Backend: `routes/children.js` (children of the current user), `routes/specialists.js` (link, list, unlink), `middleware/childAccess.js` (`requireChildAccess`). Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist) | FR-M2-01 … FR-M2-08 |
 | M3 – Weekly schedule | | |
-| M4 – Tasks | | |
+| M4 – Tasks | Backend: `routes/tasks.js` (create, list, mark done), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, development area and due date. Frontend: `TasksPage` (parent and specialist: task list and "assign task" form), `MyTasksPage` (child: own tasks and "mark as done") | FR-M4-01 … FR-M4-09 |
 | M5 – Specialist entries | | |
 | M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
-| M7 – Weekly statistics | | |
+| M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), a helper that turns any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
 | M8 – Role-based AI summary | | |
 
 ### Access control
@@ -98,11 +98,28 @@ erDiagram
         int size_bytes
         datetime uploaded_at
     }
+    USERS ||--o{ TASKS : "child"
+    USERS ||--o{ TASKS : "assigned by"
+    TASKS {
+        int id PK
+        int child_id FK
+        int assigner_id FK
+        string title
+        string description
+        string development_area "motor, language, cognitive, social-emotional or self-care"
+        date due_date
+        string status "todo or done"
+        datetime created_at
+        datetime done_at
+    }
 ```
 
 - A child is a user with the role `child`; `parent_id` links the child to their parent. A parent can have more than one child, and each child has one parent.
 - `(child_id, specialist_id)` is unique in `specialist_links`, so a specialist cannot be linked to the same child twice. Unlinking deletes the row.
 - Uploaded files are stored on disk under a random name, so user-supplied file names are never used as paths.
+- A task belongs to one child and was assigned by one user (the parent or a linked specialist). Every task starts with the status `todo`; only the child can change it to `done`.
+- `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
+- M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
 
 ---
 
@@ -121,6 +138,10 @@ erDiagram
 | GET | `/api/children/:childId/documents` | List the child's documents | M6 |
 | POST | `/api/children/:childId/documents` | Upload a PDF or image (max 10 MB) | M6 |
 | GET | `/api/children/:childId/documents/:documentId/download` | Download a document | M6 |
+| GET | `/api/children/:childId/tasks` | List the child's tasks: the parent and linked specialists get all of the child's tasks, the child gets their own | M4 |
+| POST | `/api/children/:childId/tasks` | Assign a task with title, description, development area and due date (parent or linked specialist) | M4 |
+| PATCH | `/api/children/:childId/tasks/:taskId/done` | Mark a task as done (child only) | M4 |
+| GET | `/api/children/:childId/statistics/weekly?weekStart=YYYY-MM-DD` | Completion rate for the week, in total and by development area; defaults to the current week (parent and linked specialist) | M7 |
 
 ---
 
@@ -163,3 +184,4 @@ sequenceDiagram
 |---|---|---|
 | 2026-10-25 | Template added | Yağız Yalçınöz |
 | 2026-10-29 | M1, M2 and M6 design, data model and access control added | Yağız Yalçınöz |
+| 2026-10-31 | M4 and M7 design, task data model and API endpoints added | Kerem Alp Ustaoğlu |
