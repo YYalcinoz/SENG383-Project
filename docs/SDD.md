@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-01
 
 > Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
 > Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
@@ -41,12 +41,12 @@ flowchart LR
 |---|---|---|
 | M1 – Login and roles | Backend: `routes/auth.js` (login, current user), `middleware/auth.js` (`authenticate`, `requireRole`), bcryptjs for password hashing, jsonwebtoken. Frontend: `LoginPage`, `AuthContext` (keeps the token and the current user), `ProtectedRoute` (role-based routing) | FR-M1-01 … FR-M1-08 |
 | M2 – Linking specialists | Backend: `routes/children.js` (children of the current user), `routes/specialists.js` (link, list, unlink), `middleware/childAccess.js` (`requireChildAccess`). Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist) | FR-M2-01 … FR-M2-08 |
-| M3 – Weekly schedule | | |
+| M3 – Weekly schedule | Backend: `routes/schedule.js` (create, list), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, date, time and event type. Frontend: `SchedulePage` (parent and specialist), `MySchedulePage` (child) | FR-M3-01 … FR-M3-06 |
 | M4 – Tasks | Backend: `routes/tasks.js` (create, list, mark done), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, development area and due date. Frontend: `TasksPage` (parent and specialist: task list and "assign task" form), `MyTasksPage` (child: own tasks and "mark as done") | FR-M4-01 … FR-M4-09 |
-| M5 – Specialist entries | | |
+| M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
 | M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
 | M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), a helper that turns any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
-| M8 – Role-based AI summary | | |
+| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests. Frontend: `SummaryPage` | FR-M8-01 … FR-M8-10 |
 
 ### Access control
 
@@ -112,6 +112,33 @@ erDiagram
         datetime created_at
         datetime done_at
     }
+    USERS ||--o{ CALENDAR_EVENTS : "child"
+    USERS ||--o{ CALENDAR_EVENTS : "created by"
+    USERS ||--o{ SPECIALIST_ENTRIES : "child"
+    USERS ||--o{ SPECIALIST_ENTRIES : "author"
+    CALENDAR_EVENTS {
+        int id PK
+        int child_id FK
+        int creator_id FK
+        string title
+        date event_date
+        time start_time
+        time end_time
+        string event_type
+        datetime created_at
+    }
+    SPECIALIST_ENTRIES {
+        int id PK
+        int child_id FK
+        int author_id FK
+        string title
+        string entry_type
+        string development_area
+        string observation_text
+        boolean is_edited
+        datetime created_at
+        datetime updated_at
+    }
 ```
 
 - A child is a user with the role `child`; `parent_id` links the child to their parent. A parent can have more than one child, and each child has one parent.
@@ -120,6 +147,9 @@ erDiagram
 - A task belongs to one child and was assigned by one user (the parent or a linked specialist). Every task starts with the status `todo`; only the child can change it to `done`.
 - `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
 - M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
+- `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist.
+- `SPECIALIST_ENTRIES` store observations made by linked specialists. The `is_edited` flag is set to true if the entry is updated after creation.
+- M8 (Role-based AI summary) has no dedicated table; summaries are generated on demand from tasks, schedule, and entries for the selected week.
 
 ---
 
@@ -142,6 +172,12 @@ erDiagram
 | POST | `/api/children/:childId/tasks` | Assign a task with title, description, development area and due date (parent or linked specialist) | M4 |
 | PATCH | `/api/children/:childId/tasks/:taskId/done` | Mark a task as done (child only) | M4 |
 | GET | `/api/children/:childId/statistics/weekly?weekStart=YYYY-MM-DD` | Completion rate for the week, in total and by development area; defaults to the current week (parent and linked specialist) | M7 |
+| GET | `/api/children/:childId/schedule` | List the child's calendar events (child, parent, linked specialists) | M3 |
+| POST | `/api/children/:childId/schedule` | Add a calendar event (parent or linked specialist) | M3 |
+| GET | `/api/children/:childId/entries` | List specialist entries for the child (parent and linked specialist only) | M5 |
+| POST | `/api/children/:childId/entries` | Add a specialist entry (linked specialist only) | M5 |
+| PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (marks as edited) | M5 |
+| GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week (parent and linked specialist only) | M8 |
 
 ---
 
@@ -166,6 +202,19 @@ sequenceDiagram
 
 ### Flow 3:
 
+```mermaid
+sequenceDiagram
+    actor Parent
+    Parent->>Frontend: Open weekly summary
+    Frontend->>Backend: GET /api/children/:childId/summary/weekly
+    Backend->>Database: Fetch week's tasks, schedule & entries
+    Database-->>Backend: Return authorized records
+    Backend->>AI Service: Send role-based prompt + data
+    AI Service-->>Backend: Return generated text
+    Backend-->>Frontend: Summary text + Source links
+    Frontend-->>Parent: Show summary labelled "AI-generated"
+```
+
 ---
 
 ## 6. User Interface
@@ -185,3 +234,4 @@ sequenceDiagram
 | 2026-10-25 | Template added | Yağız Yalçınöz |
 | 2026-10-29 | M1, M2 and M6 design, data model and access control added | Yağız Yalçınöz |
 | 2026-10-31 | M4 and M7 design, task data model and API endpoints added | Kerem Alp Ustaoğlu |
+| 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila Tetik |
