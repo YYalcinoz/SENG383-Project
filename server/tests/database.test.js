@@ -17,14 +17,16 @@ describe('Database and Table Tests', () => {
       expect(columns).toContain('name');
       expect(columns).toContain('email');
       expect(columns).toContain('role');
+      expect(columns).toContain('password_hash');
+      expect(columns).toContain('parent_id');
       done();
     });
   });
 
   test('should allow inserting valid roles (parent, specialist, child)', (done) => {
     db.run(
-      `INSERT INTO users (name, email, role) VALUES (?, ?, ?)`,
-      ['Test Parent', 'parent@test.com', 'parent'],
+      `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`,
+      ['Test Parent', 'parent@test.com', 'test-hash', 'parent'],
       function (err) {
         expect(err).toBeNull();
         expect(this.lastID).toBeGreaterThan(0);
@@ -35,8 +37,8 @@ describe('Database and Table Tests', () => {
 
   test('should fail when inserting an invalid role due to CHECK constraint', (done) => {
     db.run(
-      `INSERT INTO users (name, email, role) VALUES (?, ?, ?)`,
-      ['Test Invalid', 'invalid@test.com', 'SuperAdmin'],
+      `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`,
+      ['Test Invalid', 'invalid@test.com', 'test-hash', 'SuperAdmin'],
       (err) => {
         expect(err).not.toBeNull(); // CHECK kısıtından dolayı hata bekliyoruz
         done();

@@ -1,4 +1,8 @@
+const bcrypt = require('bcryptjs');
 const db = require('../src/db/database');
+
+// Sadece sentetik demo hesapları için
+const passwordHash = bcrypt.hashSync('password123', 10);
 
 const sampleUsers = [
   { name: 'Ayşe Yılmaz', email: 'ayse@example.com', role: 'parent' },
@@ -9,10 +13,10 @@ const sampleUsers = [
 db.serialize(() => {
   console.log('Seed process started...');
 
-  const stmt = db.prepare(`INSERT OR IGNORE INTO users (name, email, role) VALUES (?, ?, ?)`);
+  const stmt = db.prepare(`INSERT OR IGNORE INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)`);
 
   sampleUsers.forEach(user => {
-    stmt.run(user.name, user.email, user.role, (err) => {
+    stmt.run(user.name, user.email, passwordHash, user.role, (err) => {
       if (err) {
         console.error('Error inserting user:', err.message);
       } else {

@@ -12,13 +12,29 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// İlk tablolarımızı oluşturalım (roller: parent, specialist, child)
+// Tablolar (roller: parent, specialist, child)
 db.serialize(() => {
+  // SQLite yabancı anahtarları varsayılan olarak uygulamaz; her bağlantıda açılmalı
+  db.run('PRAGMA foreign_keys = ON');
+
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('parent', 'specialist', 'child'))
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('parent', 'specialist', 'child')),
+    parent_id INTEGER REFERENCES users(id)
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS specialist_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id INTEGER NOT NULL REFERENCES users(id),
+    specialist_id INTEGER NOT NULL REFERENCES users(id),
+    specialist_type TEXT NOT NULL CHECK(specialist_type IN (
+      'teacher', 'psychologist', 'doctor', 'special education teacher', 'coach'
+    )),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (child_id, specialist_id)
   )`);
 });
 
