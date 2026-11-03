@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-03
 
 > Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
 > Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
@@ -179,6 +179,29 @@ erDiagram
 | PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (marks as edited) | M5 |
 | GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week (parent and linked specialist only) | M8 |
 
+### Authentication API format
+
+All errors use the format `{ "error": "message" }`.
+
+**POST `/api/auth/login`**
+
+Request: `{ "email": "...", "password": "..." }`
+
+| Status | Response |
+|---|---|
+| 200 | `{ "token": "...", "user": { "id": 1, "name": "...", "role": "parent" } }` |
+| 400 | Email or password is missing |
+| 401 | `{ "error": "Invalid email or password" }` |
+
+**GET `/api/auth/me`**
+
+Header: `Authorization: Bearer <token>`
+
+| Status | Response |
+|---|---|
+| 200 | `{ "user": { "id": 1, "name": "...", "role": "parent" } }` |
+| 401 | Token is missing, invalid or expired |
+
 ---
 
 ## 5. Critical Flows
@@ -235,3 +258,4 @@ sequenceDiagram
 | 2026-10-29 | M1, M2 and M6 design, data model and access control added | Yağız Yalçınöz |
 | 2026-10-31 | M4 and M7 design, task data model and API endpoints added | Kerem Alp Ustaoğlu |
 | 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila Tetik |
+| 2026-11-03 | Login and current user API format added | Yağız Yalçınöz |
