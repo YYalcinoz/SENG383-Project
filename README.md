@@ -97,12 +97,13 @@ All data is synthetic. `npm run seed` creates the database file `server/database
 
 ## Configuration
 
-Optional environment variables for the backend:
+Optional environment variables for the backend (copy `server/.env.example` to `server/.env` to set them):
 
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | `3000` | Port of the backend server |
 | `DB_PATH` | `server/database.db` | Path of the SQLite database file |
+| `JWT_SECRET` | random on each start | Secret that signs login tokens; without it, users are logged out when the server restarts |
 
 ## Project structure
 
