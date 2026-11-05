@@ -36,6 +36,16 @@ describe('POST /api/auth/login', () => {
     expect(payload.exp - payload.iat).toBe(2 * 60 * 60);
   });
 
+  test('ignores case and surrounding spaces in the email', async () => {
+    const res = await login({ email: '  Parent@Test.COM ', password: 'correct-password' });
+    expect(res.status).toBe(200);
+  });
+
+  test('does not ignore case in the password', async () => {
+    const res = await login({ email: 'parent@test.com', password: 'Correct-Password' });
+    expect(res.status).toBe(401);
+  });
+
   test('never returns the password hash', async () => {
     const res = await login({ email: 'parent@test.com', password: 'correct-password' });
     expect(JSON.stringify(res.body)).not.toContain('password_hash');

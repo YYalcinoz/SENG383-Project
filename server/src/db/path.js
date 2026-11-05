@@ -1,3 +1,5 @@
+require('../config');
+
 const path = require('path');
 
 // Veritabanı yolu tek yerde: hem bağlantı hem seed aynı dosyayı kullansın

@@ -17,7 +17,11 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const user = await get('SELECT id, name, role, password_hash FROM users WHERE email = ?', [email]);
+  // E-postalar küçük harfle saklanır; " Ayse@Example.com " ile de giriş yapılabilsin
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await get('SELECT id, name, role, password_hash FROM users WHERE email = ?', [
+    normalizedEmail,
+  ]);
   const passwordMatches = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
 
   if (!user || !passwordMatches) {

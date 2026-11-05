@@ -56,6 +56,8 @@ Every protected request passes through three middleware functions:
 2. `requireRole(...roles)` returns 403 if the user's role is not allowed for the endpoint.
 3. `requireChildAccess` checks, on every request and against the database, that the user may access the child in the URL: a parent must be the child's parent, a specialist must have a row in `specialist_links`, and a child may only access their own data. Because the link is checked in the database and not in the token, an unlinked specialist is rejected even while their JWT is still valid (FR-M2-08).
 
+Email addresses are stored in lower case and compared after trimming and lower-casing, so `Ayse@Example.com` and `ayse@example.com` are the same account.
+
 All child-related endpoints use the prefix `/api/children/:childId/...`, so the same check applies to every module.
 
 The JWT is signed with `JWT_SECRET` from `.env` (optional, see `server/.env.example`; without it a random secret is created at startup, so no secret is stored in the repository), expires after 2 hours and is kept in the browser's localStorage. localStorage is readable by JavaScript, so an XSS bug could expose the token; we accept this for simplicity and reduce the risk by relying on React's default escaping (no `dangerouslySetInnerHTML`) and the short expiry.

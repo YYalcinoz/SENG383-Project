@@ -1,4 +1,3 @@
-require('../config');
 const sqlite3 = require('sqlite3').verbose();
 const dbPath = require('./path');
 
