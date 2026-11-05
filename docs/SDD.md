@@ -190,7 +190,7 @@ Request: `{ "email": "...", "password": "..." }`
 | Status | Response |
 |---|---|
 | 200 | `{ "token": "...", "user": { "id": 1, "name": "...", "role": "parent" } }` |
-| 400 | Email or password is missing |
+| 400 | `{ "error": "Email and password are required" }` |
 | 401 | `{ "error": "Invalid email or password" }` |
 
 **GET `/api/auth/me`**
@@ -200,7 +200,8 @@ Header: `Authorization: Bearer <token>`
 | Status | Response |
 |---|---|
 | 200 | `{ "user": { "id": 1, "name": "...", "role": "parent" } }` |
-| 401 | Token is missing, invalid or expired |
+| 401 (no token) | `{ "error": "Authentication required" }` |
+| 401 (invalid or expired token) | `{ "error": "Invalid or expired token" }` |
 
 ---
 
