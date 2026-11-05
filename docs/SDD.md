@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-06
 
 > Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
 > Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
@@ -45,8 +45,8 @@ flowchart LR
 | M4 – Tasks | Backend: `routes/tasks.js` (create, list, mark done), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, development area and due date. Frontend: `TasksPage` (parent and specialist: task list and "assign task" form), `MyTasksPage` (child: own tasks and "mark as done") | FR-M4-01 … FR-M4-09 |
 | M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
 | M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
-| M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), a helper that turns any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
-| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests. Frontend: `SummaryPage` | FR-M8-01 … FR-M8-10 |
+| M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), `getWeekRange` from `utils/week.js` (shared with M8) to turn any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
+| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests; uses `getWeekRange` from `utils/week.js` (shared with M7); stores "Helpful" / "Incorrect info" feedback in `ai_feedback`. Frontend: `SummaryPage` (summary, source links and feedback buttons) | FR-M8-01 … FR-M8-10 |
 
 ### Access control
 
@@ -133,6 +133,7 @@ erDiagram
         int id PK
         int child_id FK
         int author_id FK
+        date entry_date "date of the observation, chosen by the specialist"
         string title
         string entry_type
         string development_area
@@ -140,6 +141,16 @@ erDiagram
         boolean is_edited
         datetime created_at
         datetime updated_at
+    }
+    USERS ||--o{ AI_FEEDBACK : "child"
+    USERS ||--o{ AI_FEEDBACK : "given by"
+    AI_FEEDBACK {
+        int id PK
+        int child_id FK "child the summary is about"
+        int user_id FK "parent or linked specialist who gave the rating"
+        date week_start "Monday of the summarized week"
+        string rating "helpful or incorrect"
+        datetime created_at
     }
 ```
 
@@ -150,8 +161,10 @@ erDiagram
 - `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
 - M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
 - `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist.
-- `SPECIALIST_ENTRIES` store observations made by linked specialists. The `is_edited` flag is set to true if the entry is updated after creation.
-- M8 (Role-based AI summary) has no dedicated table; summaries are generated on demand from tasks, schedule, and entries for the selected week.
+- `SPECIALIST_ENTRIES` store observations made by linked specialists. `entry_date` is the date of the observation, entered by the specialist (FR-M5-01); it can differ from `created_at`, which is when the entry was saved. The `is_edited` flag is set to true if the entry is updated after creation.
+- A week runs from Monday to Sunday. To decide which records belong to a week, tasks use `due_date`, calendar events use `event_date` and specialist entries use `entry_date`, so M7 and M8 use the same definition of a week. Both use one helper, `getWeekRange(date)` in `server/src/utils/week.js`, which returns the Monday and Sunday of the week that contains the given date.
+- M8 summaries are not stored; they are generated on demand from the tasks, calendar events and specialist entries of the selected week. Only feedback is stored, in `AI_FEEDBACK` (FR-M8-06).
+- In `AI_FEEDBACK`, `child_id` is the child the summary is about and `user_id` is the parent or linked specialist who rated it; the child never sees summaries (FR-M8-08), so a child cannot give feedback. `(child_id, user_id, week_start)` is unique, so each user gives one rating per child and week; rating again replaces the earlier rating. `rating` is a text column with a `CHECK` constraint (`helpful` or `incorrect`). The summary text itself is not stored: it would come from the client, so the server could not check that it is the real summary, and it would keep a copy of the child's data outside the source records.
 
 ---
 
@@ -180,6 +193,7 @@ erDiagram
 | POST | `/api/children/:childId/entries` | Add a specialist entry (linked specialist only) | M5 |
 | PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (marks as edited) | M5 |
 | GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week (parent and linked specialist only) | M8 |
+| POST | `/api/children/:childId/summary/feedback` | Rate the week's summary as helpful or incorrect, with `weekStart` and `rating`; replaces the user's earlier rating for that week (parent and linked specialist only) | M8 |
 
 ### Authentication API format
 
@@ -204,6 +218,25 @@ Header: `Authorization: Bearer <token>`
 | 200 | `{ "user": { "id": 1, "name": "...", "role": "parent" } }` |
 | 401 (no token) | `{ "error": "Authentication required" }` |
 | 401 (invalid or expired token) | `{ "error": "Invalid or expired token" }` |
+
+### AI summary feedback API format
+
+**POST `/api/children/:childId/summary/feedback`**
+
+Header: `Authorization: Bearer <token>`
+
+Request: `{ "weekStart": "YYYY-MM-DD", "rating": "helpful" }` (`rating` is `helpful` or `incorrect`)
+
+`weekStart` can be any day of the week: the server turns it into that week's Monday with `getWeekRange`, so the same week is always stored with the same `week_start` and a user cannot rate one week twice.
+
+| Status | Response |
+|---|---|
+| 200 | `{ "feedback": { "weekStart": "2026-11-02", "rating": "helpful" } }` |
+| 400 (invalid rating) | `{ "error": "Rating must be helpful or incorrect" }` |
+| 400 (invalid date) | `{ "error": "weekStart must be a date in YYYY-MM-DD format" }` |
+| 400 (no records in the week, FR-M8-09) | `{ "error": "There is no summary for this week" }` |
+| 401 | Same as for every protected endpoint (see above) |
+| 403 | The user is a child, a parent of another child, or a specialist who is not linked to the child |
 
 ---
 
@@ -262,3 +295,4 @@ sequenceDiagram
 | 2026-10-31 | M4 and M7 design, task data model and API endpoints added | Kerem Alp Ustaoğlu |
 | 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila Tetik |
 | 2026-11-03 | Login and current user API format added | Yağız Yalçınöz |
+| 2026-11-06 | M5 observation date, M8 feedback table, endpoint and API format, and shared week helper added | Zeynep Dila Tetik |
