@@ -93,7 +93,7 @@ The same tests, plus a production build of the frontend, run automatically in Gi
 
 ## Sample data
 
-All data is synthetic. `npm run seed` creates the database file `server/database.db` with sample users for each role (parent, specialist and child). The script can be run again safely; existing users are not duplicated. To start from an empty database, delete `server/database.db` and run `npm run seed` again.
+All data is synthetic. `npm run seed` creates the database file `server/database.db` with sample users for each role (parent, specialist and child). The script deletes any existing database file first, so it always builds the current schema with the same sample data. Run it again after pulling changes to the schema. Anything added through the application is lost, and the backend must be stopped first, because a running server keeps using the deleted file.
 
 ## Configuration
 
