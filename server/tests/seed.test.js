@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const sqlite3 = require('sqlite3');
+const bcrypt = require('bcryptjs');
 
 const runSeed = (dbPath) =>
   execFileSync(process.execPath, [path.resolve(__dirname, '../scripts/seed.js')], {
@@ -39,7 +40,7 @@ describe('seed script', () => {
 
     const [{ count }] = await query(dbPath, 'SELECT COUNT(*) AS count FROM users');
     const columns = (await query(dbPath, 'PRAGMA table_info(users)')).map((c) => c.name);
-    expect(count).toBe(5);
+    expect(count).toBe(6);
     expect(columns).toContain('password_hash');
   });
 
@@ -48,7 +49,7 @@ describe('seed script', () => {
     runSeed(dbPath);
 
     const [{ count }] = await query(dbPath, 'SELECT COUNT(*) AS count FROM users');
-    expect(count).toBe(5);
+    expect(count).toBe(6);
   });
 
   test('links every child to a parent, in two separate families', async () => {
@@ -83,5 +84,15 @@ describe('seed script', () => {
 
     const users = await query(dbPath, 'SELECT email FROM users');
     users.forEach(({ email }) => expect(email).toBe(email.toLowerCase()));
+  });
+
+  test('stores the demo password only as a bcrypt hash', async () => {
+    runSeed(dbPath);
+
+    const users = await query(dbPath, 'SELECT password_hash FROM users');
+    for (const { password_hash: hash } of users) {
+      expect(hash).toMatch(/^\$2[aby]\$/);
+      expect(await bcrypt.compare('password123', hash)).toBe(true);
+    }
   });
 });

@@ -27,7 +27,12 @@ const families = [
   },
 ];
 
-const specialists = [{ name: 'Mehmet Demir', email: 'mehmet@example.com' }];
+// Elif hiçbir çocuğa bağlı değil: ebeveynin uzman bağlama akışını (Flow 1)
+// demo ve E2E testlerinde gösterebilmek için
+const specialists = [
+  { name: 'Mehmet Demir', email: 'mehmet@example.com' },
+  { name: 'Elif Arslan', email: 'elif@example.com' },
+];
 
 // Mehmet sadece Zeynep'e bağlı. Ali'ye bağlı olmaması, bağlı olmayan bir
 // uzmanın çocuğun verisini göremediğini test etmek için kullanılır.
