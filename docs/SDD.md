@@ -236,7 +236,7 @@ Request: `{ "weekStart": "YYYY-MM-DD", "rating": "helpful" }` (`rating` is `help
 | 400 (invalid date) | `{ "error": "weekStart must be a date in YYYY-MM-DD format" }` |
 | 400 (no records in the week, FR-M8-09) | `{ "error": "There is no summary for this week" }` |
 | 401 | Same as for every protected endpoint (see above) |
-| 403 | The user is a child, or a specialist who is not linked to the child |
+| 403 | The user is a child, a parent of another child, or a specialist who is not linked to the child |
 
 ---
 
