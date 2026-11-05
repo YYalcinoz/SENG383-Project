@@ -93,7 +93,25 @@ The same tests, plus a production build of the frontend, run automatically in Gi
 
 ## Sample data
 
-All data is synthetic. `npm run seed` creates the database file `server/database.db` with sample users for each role (parent, specialist and child). The script deletes any existing database file first, so it always builds the current schema with the same sample data. Run it again after pulling changes to the schema. Anything added through the application is lost, and the backend must be stopped first, because a running server keeps using the deleted file.
+All data is synthetic. `npm run seed` creates the database file `server/database.db` with two families (a parent and a child each) and one specialist. The script deletes any existing database file first, so it always builds the current schema with the same sample data. Run it again after pulling changes to the schema. Anything added through the application is lost, and the backend must be stopped first, because a running server keeps using the deleted file.
+
+### Demo accounts
+
+All accounts are synthetic and do not belong to real people. Every account uses the password `password123`.
+
+| Name | Email | Role | Linked to |
+|---|---|---|---|
+| Ayşe Yılmaz | ayse@example.com | parent | Parent of Zeynep |
+| Zeynep Yılmaz | zeynep@example.com | child | Child of Ayşe |
+| Fatma Şahin | fatma@example.com | parent | Parent of Ali |
+| Ali Şahin | ali@example.com | child | Child of Fatma |
+| Mehmet Demir | mehmet@example.com | specialist | Linked to Zeynep as a teacher |
+
+For testing access control:
+
+- Mehmet is linked to Zeynep only, so he must not see Ali's data.
+- Each parent sees only their own child: Fatma must not see Zeynep's data, and Ayşe must not see Ali's.
+- A child sees only their own tasks and schedule.
 
 ## Configuration
 
