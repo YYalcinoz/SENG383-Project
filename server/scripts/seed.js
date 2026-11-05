@@ -1,4 +1,13 @@
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const dbPath = require('../src/db/path');
+
+// Seed her seferinde sıfırdan kurar. CREATE TABLE IF NOT EXISTS eski tabloları
+// değiştirmediği için şema değişince eski dosya uygulamayı bozardı. Veriler sentetik.
+if (dbPath !== ':memory:') {
+  fs.rmSync(dbPath, { force: true });
+}
+
 const db = require('../src/db/database');
 
 // Sadece sentetik demo hesapları için
@@ -19,6 +28,7 @@ db.serialize(() => {
     stmt.run(user.name, user.email, passwordHash, user.role, (err) => {
       if (err) {
         console.error('Error inserting user:', err.message);
+        process.exitCode = 1;
       } else {
         console.log(`Added: ${user.name}`);
       }
@@ -26,7 +36,7 @@ db.serialize(() => {
   });
 
   stmt.finalize(() => {
-    console.log('Seed process completed.');
+    console.log(process.exitCode ? 'Seed process failed.' : 'Seed process completed.');
     db.close();
   });
 });

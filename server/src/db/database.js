@@ -1,8 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-
-// Veritabanı yolunu process.env.DB_PATH üzerinden veya server/ klasöründe olacak şekilde ayarladık
-const dbPath = process.env.DB_PATH || path.resolve(__dirname, '../../database.db');
+const dbPath = require('./path');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
