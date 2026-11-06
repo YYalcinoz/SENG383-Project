@@ -3,10 +3,12 @@ const dbPath = require('./path');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error connecting to the database:', err.message);
-  } else {
-    console.log('Successfully connected to the SQLite database.');
+    // Veritabanı açılamazsa devam etmek yerine dur: yoksa sunucu sağlıklı
+    // görünür ama veritabanı kullanan istekler hiç cevap almadan bekler
+    console.error(`Cannot open the database at ${dbPath}: ${err.message}`);
+    process.exit(1);
   }
+  console.log('Successfully connected to the SQLite database.');
 });
 
 // Tablolar (roller: parent, specialist, child)
