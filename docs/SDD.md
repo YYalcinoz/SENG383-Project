@@ -54,9 +54,21 @@ Every protected request passes through three middleware functions:
 
 1. `authenticate` verifies the JWT and puts the user (id, role) on the request; a missing or invalid token returns 401.
 2. `requireRole(...roles)` returns 403 if the user's role is not allowed for the endpoint.
-3. `requireChildAccess` checks, on every request and against the database, that the user may access the child in the URL: a parent must be the child's parent, a specialist must have a row in `specialist_links`, and a child may only access their own data. Because the link is checked in the database and not in the token, an unlinked specialist is rejected even while their JWT is still valid (FR-M2-08).
+3. `requireChildAccess` checks, on every request and against the database, that the user may access the child in the URL: a parent must be the child's parent, a specialist must have a row in `specialist_links`, and a child may only access their own data. Because the link is checked in the database and not in the token, an unlinked specialist is rejected even while their JWT is still valid (FR-M2-08). A child id that is not a positive whole number returns 400. A child that does not exist returns the same 403 as a child the user may not access, so the API does not reveal which child ids exist.
 
 Email addresses are stored in lower case and compared after trimming and lower-casing, so `Ayse@Example.com` and `ayse@example.com` are the same account.
+
+Error responses of the access checks:
+
+| Status | Response | When |
+|---|---|---|
+| 401 | `{ "error": "Authentication required" }` | No token, or a protected route without `authenticate` |
+| 401 | `{ "error": "Invalid or expired token" }` | The token is invalid or expired; on `GET /api/auth/me` also when the user no longer exists |
+| 403 | `{ "error": "You do not have permission to do this" }` | `requireRole`: the user's role is not allowed for the endpoint |
+| 403 | `{ "error": "You do not have access to this child" }` | `requireChildAccess`: the child does not exist or the user may not access it |
+| 400 | `{ "error": "Invalid child id" }` | `requireChildAccess`: `:childId` is not a positive whole number |
+
+Routers mounted under `/api/children/:childId` are created with `express.Router({ mergeParams: true })`, so that `requireChildAccess` can read `:childId`.
 
 All child-related endpoints use the prefix `/api/children/:childId/...`, so the same check applies to every module.
 
