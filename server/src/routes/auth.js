@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config');
 const { get } = require('../db/helpers');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -34,6 +35,16 @@ router.post('/login', async (req, res) => {
   });
 
   res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+});
+
+router.get('/me', authenticate, async (req, res) => {
+  const user = await get('SELECT id, name, role FROM users WHERE id = ?', [req.user.id]);
+
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  res.json({ user });
 });
 
 module.exports = router;
