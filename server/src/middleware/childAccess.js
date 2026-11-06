@@ -19,10 +19,18 @@ async function canAccess(user, child) {
   return false;
 }
 
-// Use after authenticate on every route with :childId in the URL
+// Use after authenticate on every route with :childId in the URL. A router
+// mounted under /api/children/:childId must be created with
+// express.Router({ mergeParams: true }), or req.params.childId is missing.
 async function requireChildAccess(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // A missing parameter is a mistake in the route setup, not bad user input:
+  // fail loudly with 500 instead of a misleading 400
+  if (req.params.childId === undefined) {
+    return next(new Error('requireChildAccess needs a :childId route parameter (use mergeParams: true)'));
   }
 
   if (!/^[1-9]\d{0,9}$/.test(req.params.childId)) {

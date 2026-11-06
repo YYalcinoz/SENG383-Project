@@ -140,6 +140,32 @@ describe('requireChildAccess: input and setup', () => {
     expect((await request(app).get(`/children/${users.childA.id}/data`)).status).toBe(401);
   });
 
+  test('works in a router mounted under /children/:childId with mergeParams', async () => {
+    const router = express.Router({ mergeParams: true });
+    router.get('/data', authenticate, requireChildAccess, (req, res) => res.json({ child: req.child }));
+    const mounted = express();
+    mounted.use('/children/:childId', router);
+
+    const res = await request(mounted)
+      .get(`/children/${users.childA.id}/data`)
+      .set('Authorization', `Bearer ${tokenFor(users.parentA)}`);
+    expect(res.status).toBe(200);
+  });
+
+  test('fails with 500, not 400, when the route has no :childId parameter', async () => {
+    const router = express.Router(); // mergeParams forgotten
+    router.get('/data', authenticate, requireChildAccess, (req, res) => res.json({}));
+    const mounted = express();
+    mounted.use('/children/:childId', router);
+    mounted.use((err, req, res, next) => res.status(500).json({ error: err.message }));
+
+    const res = await request(mounted)
+      .get(`/children/${users.childA.id}/data`)
+      .set('Authorization', `Bearer ${tokenFor(users.parentA)}`);
+    expect(res.status).toBe(500);
+    expect(res.body.error).toContain('mergeParams');
+  });
+
   test('returns 401 when authenticate was not used on the route', async () => {
     const unprotected = express();
     unprotected.get('/children/:childId/data', requireChildAccess, (req, res) => res.json({}));

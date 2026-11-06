@@ -58,6 +58,18 @@ Every protected request passes through three middleware functions:
 
 Email addresses are stored in lower case and compared after trimming and lower-casing, so `Ayse@Example.com` and `ayse@example.com` are the same account.
 
+Error responses of the access checks:
+
+| Status | Response | When |
+|---|---|---|
+| 401 | `{ "error": "Authentication required" }` | No token, or a protected route without `authenticate` |
+| 401 | `{ "error": "Invalid or expired token" }` | The token is invalid, expired or belongs to a deleted user |
+| 403 | `{ "error": "You do not have permission to do this" }` | `requireRole`: the user's role is not allowed for the endpoint |
+| 403 | `{ "error": "You do not have access to this child" }` | `requireChildAccess`: the child does not exist or the user may not access it |
+| 400 | `{ "error": "Invalid child id" }` | `requireChildAccess`: `:childId` is not a positive whole number |
+
+Routers mounted under `/api/children/:childId` are created with `express.Router({ mergeParams: true })`, so that `requireChildAccess` can read `:childId`.
+
 All child-related endpoints use the prefix `/api/children/:childId/...`, so the same check applies to every module.
 
 The JWT is signed with `JWT_SECRET` from `.env` (optional, see `server/.env.example`; without it a random secret is created at startup, so no secret is stored in the repository), expires after 2 hours and is kept in the browser's localStorage. localStorage is readable by JavaScript, so an XSS bug could expose the token; we accept this for simplicity and reduce the risk by relying on React's default escaping (no `dangerouslySetInnerHTML`) and the short expiry.
