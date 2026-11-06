@@ -35,6 +35,26 @@ db.serialize(() => {
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (child_id, specialist_id)
   )`);
+
+  // M3: haftalık program. Tarih YYYY-MM-DD, saat HH:MM olarak saklanır; biçim
+  // veritabanında da kontrol edilir, çünkü haftalık görünüm ve M8 tarihleri
+  // metin olarak karşılaştırır (event_date BETWEEN ...) ve bu sadece tüm
+  // tarihler aynı biçimdeyse doğru çalışır. date()/time() geçersiz bir tarih
+  // ya da saat için NULL döner, IS de NULL'u eşit saymaz. SQLite "24:00"ı
+  // geçerli saydığı için ayrıca < '24:00' kontrol edilir.
+  db.run(`CREATE TABLE IF NOT EXISTS calendar_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id INTEGER NOT NULL REFERENCES users(id),
+    creator_id INTEGER NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+    event_date TEXT NOT NULL CHECK(date(event_date) IS event_date),
+    start_time TEXT NOT NULL CHECK(time(start_time) IS (start_time || ':00') AND start_time < '24:00'),
+    end_time TEXT CHECK(end_time IS NULL OR (
+      time(end_time) IS (end_time || ':00') AND end_time < '24:00' AND end_time > start_time
+    )),
+    event_type TEXT NOT NULL CHECK(event_type IN ('school', 'support', 'health', 'sports', 'other')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
 
 module.exports = db;

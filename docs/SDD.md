@@ -135,10 +135,10 @@ erDiagram
         int child_id FK
         int creator_id FK
         string title
-        date event_date
-        time start_time
-        time end_time
-        string event_type
+        date event_date "YYYY-MM-DD"
+        time start_time "HH:MM"
+        time end_time "HH:MM, optional"
+        string event_type "school, support, health, sports or other"
         datetime created_at
     }
     SPECIALIST_ENTRIES {
@@ -172,7 +172,7 @@ erDiagram
 - A task belongs to one child and was assigned by one user (the parent or a linked specialist). Every task starts with the status `todo`; only the child can change it to `done`.
 - `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
 - M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
-- `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist.
+- `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist. FR-M3-01 asks for one time, so `start_time` is required and `end_time` is optional; when it is given, it must be after `start_time`. Dates are stored as `YYYY-MM-DD` and times as `HH:MM`, and `CHECK` constraints reject any other format, because the weekly view and M8 compare dates as text (`event_date BETWEEN ...`), which only works when every date has the same format.
 - `SPECIALIST_ENTRIES` store observations made by linked specialists. `entry_date` is the date of the observation, entered by the specialist (FR-M5-01); it can differ from `created_at`, which is when the entry was saved. The `is_edited` flag is set to true if the entry is updated after creation.
 - A week runs from Monday to Sunday. To decide which records belong to a week, tasks use `due_date`, calendar events use `event_date` and specialist entries use `entry_date`, so M7 and M8 use the same definition of a week. Both use one helper, `getWeekRange(date)` in `server/src/utils/week.js`, which returns the Monday and Sunday of the week that contains the given date.
 - M8 summaries are not stored; they are generated on demand from the tasks, calendar events and specialist entries of the selected week. Only feedback is stored, in `AI_FEEDBACK` (FR-M8-06).
@@ -308,3 +308,4 @@ sequenceDiagram
 | 2026-11-01 | M3, M5 and M8 design, data model and API endpoints added | Zeynep Dila Tetik |
 | 2026-11-03 | Login and current user API format added | Yağız Yalçınöz |
 | 2026-11-06 | M5 observation date, M8 feedback table, endpoint and API format, and shared week helper added | Zeynep Dila Tetik |
+| 2026-11-06 | M3 calendar event time rules and date and time formats added | Zeynep Dila Tetik |
