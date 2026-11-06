@@ -63,7 +63,7 @@ Error responses of the access checks:
 | Status | Response | When |
 |---|---|---|
 | 401 | `{ "error": "Authentication required" }` | No token, or a protected route without `authenticate` |
-| 401 | `{ "error": "Invalid or expired token" }` | The token is invalid, expired or belongs to a deleted user |
+| 401 | `{ "error": "Invalid or expired token" }` | The token is invalid or expired; on `GET /api/auth/me` also when the user no longer exists |
 | 403 | `{ "error": "You do not have permission to do this" }` | `requireRole`: the user's role is not allowed for the endpoint |
 | 403 | `{ "error": "You do not have access to this child" }` | `requireChildAccess`: the child does not exist or the user may not access it |
 | 400 | `{ "error": "Invalid child id" }` | `requireChildAccess`: `:childId` is not a positive whole number |
