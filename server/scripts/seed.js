@@ -1,11 +1,15 @@
-const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const dbPath = require('../src/db/path');
+const { resetDatabase } = require('./resetDatabase');
 
 // Seed her seferinde sıfırdan kurar. CREATE TABLE IF NOT EXISTS eski tabloları
 // değiştirmediği için şema değişince eski dosya uygulamayı bozardı. Veriler sentetik.
-if (dbPath !== ':memory:') {
-  fs.rmSync(dbPath, { force: true });
+if (!resetDatabase(dbPath)) {
+  console.error(
+    'Cannot delete the database file, probably because the backend is still running. ' +
+      'Stop the backend and run npm run seed again.'
+  );
+  process.exit(1);
 }
 
 const db = require('../src/db/database');
