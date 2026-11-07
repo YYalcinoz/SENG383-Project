@@ -1,0 +1,33 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+}
+
+.app-title {
+  font-weight: 500;
+}
+
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-user button {
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.module-list {
+  display: inline-grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  text-align: left;
+}
