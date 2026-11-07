@@ -4,12 +4,12 @@
 
 | Section | Content | Required by |
 |---|---|---|
-| PMP-1 | Project, Jira setup, team and roles | Week 6 |
+| PMP-1 | Project, Jira setup, team and roles | Week 5 |
 | PMP-2 | Work packages (epics) and sprint plan | Week 6 |
-| PMP-3 | Progress review: mid-term (v0.1) | Mid-term evaluation (Week 8 / 9) |
-| PMP-4 | Progress review: v0.2 | Week 10 |
-| PMP-5 | Progress review: final (v1.0) | Final evaluation |
-| PMP-6 | Retrospective | Final evaluation |
+| PMP-3 | Progress review: mid-term (v0.1) | Week 7 |
+| PMP-4 | Progress review: v0.2 | Week 8 |
+| PMP-5 | Progress review: final (v1.0) | Week 10 |
+| PMP-6 | Retrospective | Week 11 |
 
 ---
 
@@ -41,22 +41,22 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 |---|---|---|---|
 | PMP-1 | Yağız Yalçınöz | 5 | Sprint 1 |
 | PMP-2 | Yağız Yalçınöz | 1 | Sprint 2 |
-| PMP-3 | Yağız Yalçınöz | 0 | Sprint 4 |
+| PMP-3 | Yağız Yalçınöz | 1 | Sprints 3–4 |
 | PMP-4 | Yağız Yalçınöz | 0 | Sprint 5 |
 | PMP-5 | Yağız Yalçınöz | 0 | Sprint 7 |
 | PMP-6 | Yağız Yalçınöz | 0 | Sprint 8 |
-| M1 | Yağız Yalçınöz | 5 | Sprint 2 (walking skeleton), Sprints 3–4 |
-| M2 | Yağız Yalçınöz | 0 | Sprints 4–5 |
-| M3 | Zeynep Dila Tetik | 0 | Sprints 4–5 |
+| M1 | Yağız Yalçınöz | 16 | Sprint 2 (walking skeleton), Sprints 3–4 |
+| M2 | Yağız Yalçınöz | 1 | Sprints 3–5 |
+| M3 | Zeynep Dila Tetik | 1 | Sprints 3–5 |
 | M4 | Kerem Alp Ustaoğlu | 0 | Sprints 4–5 |
 | M5 | Zeynep Dila Tetik | 0 | Sprints 5–6 |
 | M6 | Yağız Yalçınöz | 0 | Sprints 5–6 |
 | M7 | Kerem Alp Ustaoğlu | 0 | Sprints 6–7 |
 | M8 | Zeynep Dila Tetik | 0 | Sprints 5–7 |
-| SRS | Kerem Alp Ustaoğlu | 4 | Sprint 2 (first version), Sprint 7 (final) |
-| DESIGN | Kerem Alp Ustaoğlu | 4 | Sprint 2 (first version), Sprint 7 (final) |
+| SRS | Kerem Alp Ustaoğlu | 6 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
+| DESIGN | Kerem Alp Ustaoğlu | 8 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
 
-Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner builds the module's screens, API, data and tests, and creates the module's tasks at the start of the sprints in which the module is planned; the task counts above will grow accordingly.
+Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner is responsible for the module and creates its tasks at the start of the sprints in which it is planned; individual tasks may be assigned to other team members. The task counts above show the state at the end of Sprint 3 and will grow accordingly.
 
 ### Sprint Plan
 
@@ -66,7 +66,7 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 |---|---|---|---|
 | Sprint 1 | Week 4 (19–25 Oct) | Repository, CI, Jira setup and PMP-1 | PMP-1 |
 | Sprint 2 | Week 5 (26 Oct–1 Nov) | Walking skeleton (v0.0), SRS and SDD first version, PMP-2 | Walking skeleton (v0.0), Week 6 class |
-| Sprint 3 | Week 6 (2–8 Nov) | M1 login and roles | M1 in progress |
+| Sprint 3 | Week 6 (2–8 Nov) | M1 login and roles, shared access middleware, remaining SRS and SDD sections | M1 in progress |
 | Sprint 4 | Week 7 (9–15 Nov) | M1 complete; M2, M3, M4 in progress; PMP-3 | M1 complete |
 | Sprint 5 | Week 8 (16–22 Nov) | M2, M3, M4 complete; first end-to-end test in CI; PMP-4 | Release v0.1 |
 | Sprint 6 | Week 9 (23–29 Nov) | Mid-term demo; M5, M6 complete; M8 mock mode | Mid-term evaluation (Week 9) |
@@ -82,10 +82,21 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 | Epic | Planned for this point | Status (Done / In progress / Not started) |
 |---|---|---|
-| | | |
-| | | |
+| PMP-2 | Work packages and sprint plan | |
+| SRS | First version | |
+| DESIGN | First version | |
+| M1 | Login and roles complete | |
+| M2 | Shared access middleware; module in progress | |
+| M3 | In progress | |
+| M4 | In progress | |
 
 **Changes to the plan (if any):**
+
+- **Delivery dates:** The course documents give different dates for the PMP sections and for the SRS and SDD. We follow the weekly plan, which has the earliest dates for the PMP sections, and the Week 6 and Week 10 dates in the SRS and SDD templates.
+- **Test team:** The SENG 440 test team was cancelled, so the team tests its own work. There is no separate test task: every code pull request includes its tests, and another team member reviews it.
+- **Access middleware:** `requireChildAccess` moved from M2's planned sprints to Sprint 3, because M3 and M4 depend on it.
+- **Task ownership:** Module owners stay responsible for their modules, but individual tasks can be assigned to other team members.
+- **Unplanned tasks from code review:** Reviews in Sprint 3 found two problems that were fixed in their own tasks: the server kept running when the database could not be opened (HLX-54), and the seed script printed a long error on Windows when the database file was in use (HLX-52). Both are tracked under M1.
 
 ---
 
