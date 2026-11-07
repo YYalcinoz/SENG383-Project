@@ -95,9 +95,9 @@ The JWT is signed with `JWT_SECRET` from `.env` (optional, see `server/.env.exam
 | `mock` (default) | Returns a fixed summary built from the record counts, for example "This week, 3 of 5 tasks were completed." The same records always give the same text, so tests can check it. |
 | `gemini` | Sends the prompt to the Gemini API |
 
-In tests (`NODE_ENV=test`) the mode is always `mock`, whatever `.env` says, so tests and CI never call the external API. If `AI_MODE=gemini` and `GEMINI_API_KEY` is missing, the server does not start and says which variable is missing.
+In tests (`NODE_ENV=test`) the mode is always `mock`, whatever `.env` says, so tests and CI never call the external API. The server does not start, and says what is wrong, if `AI_MODE` has any value other than `mock` or `gemini` (so a typo does not silently fall back to the mock), or if `AI_MODE=gemini` and `GEMINI_API_KEY` is missing.
 
-**Configuration.** `AI_MODE`, `GEMINI_API_KEY` and `GEMINI_MODEL` are read from `server/.env`. The model name is not written in the code, because Gemini model names change often; the default is chosen from the Gemini documentation when M8 is implemented and noted in `server/.env.example`. The API key stays on the backend: it is never sent to the frontend and never committed, since `.env` is in `.gitignore`.
+**Configuration.** `AI_MODE`, `GEMINI_API_KEY` and `GEMINI_MODEL` are read from `server/.env`. The model name is not written in the code, because Gemini model names change often; the default is chosen from the Gemini documentation when M8 is implemented and noted in `server/.env.example`. The API key stays on the backend: it is never sent to the frontend and never committed, since `.env` is in `.gitignore`. On the Gemini API's free tier, Google may use the prompts and responses to improve its products, and human reviewers may read them; this is acceptable only because all data in the system is synthetic (NFR-03), and no real personal data may be sent.
 
 **Prompts (FR-M8-03, FR-M8-04).** There is one prompt for parents and one for specialists:
 
@@ -106,13 +106,17 @@ In tests (`NODE_ENV=test`) the mode is always `mock`, whatever `.env` says, so t
 
 Both prompts contain the same rules: use only the given records, say when information is missing, and never make decisions, diagnoses or treatment suggestions.
 
-**What is sent to the AI (FR-M8-02).** The backend first checks access (`requireRole`, `requireChildAccess`), then selects only the records of the selected week that the user may see, and sends only those. Writing "do not show restricted data" in a prompt is not access control, so restricted records are never sent at all. Names, email addresses and ids are not sent either: the child is called "the child", and each record is sent with only its type, date, title, development area, status or text.
+**Prompt injection.** Task titles, event titles and specialist notes are text written by users, and they become part of the prompt. The records are therefore placed between delimiters (`<records>` … `</records>`) as data, and the prompt says that text inside the delimiters is data written by users and that any instructions in it must not be followed. This lowers the risk but cannot remove it, so the design does not depend on it: the model has no tools and no access to the database and sees only the records it was given, so the worst a malicious note can do is produce a wrong summary, which is shown labelled "AI-generated" with its source links.
+
+**Showing the answer.** The frontend shows the model's answer as plain text: React renders it as text, there is no `dangerouslySetInnerHTML`, and no Markdown library that produces HTML is used; line breaks are kept with CSS (`white-space: pre-line`). Even if the model returns HTML or a `<script>` tag, it appears as text, so the answer cannot become an XSS attack.
+
+**What is sent to the AI (FR-M8-02).** The backend first checks access (`requireRole`, `requireChildAccess`), then selects only the records of the selected week that the user may see, and sends only those. Writing "do not show restricted data" in a prompt is not access control, so restricted records are never sent at all. The backend does not add names, email addresses or ids: the child is called "the child", and each record is sent with only its type, date, title, development area, status or text. Free text such as titles and notes is sent as the user wrote it.
 
 **Source links (FR-M8-05).** The list of sources is built by the backend from the records it sent, not from the AI's answer, so a source invented by the model can never be shown. The frontend shows the summary with the "AI-generated" label and a link to each source record.
 
 **No records (FR-M8-09).** If the week has no tasks, calendar events or specialist entries, the backend does not call the AI and returns no summary, with a message.
 
-**Errors.** If the provider returns an error or does not answer within 15 seconds, the endpoint returns 502 and the rest of the application keeps working. The details are logged on the server and not sent to the client.
+**Errors.** If the provider returns an error (including 429 when the free quota is used up) or does not answer within 15 seconds, the endpoint returns 502 and the rest of the application keeps working. The details are logged on the server and not sent to the client.
 
 ---
 
@@ -374,4 +378,4 @@ sequenceDiagram
 | 2026-11-03 | Login and current user API format added | Yağız Yalçınöz |
 | 2026-11-06 | M5 observation date, M8 feedback table, endpoint and API format, and shared week helper added | Zeynep Dila Tetik |
 | 2026-11-06 | M3 calendar event time rules and date and time formats added | Zeynep Dila Tetik |
-| 2026-11-07 | AI module design (Gemini API, mock mode, prompts, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
+| 2026-11-07 | AI module design (Gemini API, mock mode, prompts, prompt injection and output handling, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
