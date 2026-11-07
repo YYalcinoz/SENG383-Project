@@ -1,0 +1,40 @@
+.login-form {
+  display: grid;
+  gap: 16px;
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.login-field {
+  display: grid;
+  gap: 4px;
+}
+
+.login-field label {
+  color: var(--text-h);
+}
+
+.login-field input {
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.login-error {
+  margin: 0;
+  color: #c62828;
+}
+
+.login-form button {
+  padding: 10px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.login-form button:disabled {
+  cursor: not-allowed;
+}
