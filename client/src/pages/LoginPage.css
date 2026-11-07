@@ -29,6 +29,13 @@
   color: #c62828;
 }
 
+/* Koyu modda koyu kırmızı zor okunuyor, daha açık bir ton kullan */
+@media (prefers-color-scheme: dark) {
+  .login-error {
+    color: #ff8a80;
+  }
+}
+
 .login-form button {
   padding: 10px 16px;
   font: inherit;

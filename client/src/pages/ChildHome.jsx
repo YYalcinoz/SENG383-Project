@@ -1,9 +1,19 @@
-// Yer tutucu: rol ekranları PR 3'te gelecek
+import ModuleList from '../components/ModuleList.jsx'
+import { useAuth } from '../auth/useAuth.js'
+
+const MODULES = [
+  { label: 'My tasks' },
+  { label: 'My schedule' },
+]
+
 export default function ChildHome() {
+  const { user } = useAuth()
+
   return (
     <main>
       <h1>Child home</h1>
-      <p>The child screens will be added here.</p>
+      <h2>Welcome, {user.name}</h2>
+      <ModuleList modules={MODULES} />
     </main>
   )
 }
