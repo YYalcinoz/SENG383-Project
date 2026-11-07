@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api.js'
-import { ROLE_HOME } from '../auth/roles.js'
+import { afterLoginPath } from '../auth/loginRedirect.js'
 import { useAuth } from '../auth/useAuth.js'
 import './LoginPage.css'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,7 +28,7 @@ export default function LoginPage() {
     try {
       const user = await login(email.trim(), password)
       setPassword('') // şifre başarılı olunca da state'te kalmasın
-      navigate(ROLE_HOME[user.role] ?? '/', { replace: true })
+      navigate(afterLoginPath(user, location), { replace: true })
     } catch (err) {
       // Backend mesajı olduğu gibi gösterilir (ör. "Invalid email or password")
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
