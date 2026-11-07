@@ -21,7 +21,7 @@
 **Jira project key:** HLX  
 **Jira board link:** https://teamhelix.atlassian.net/jira/software/projects/HLX/boards/1  
 
-The Jira space uses the Scrum template with the board columns To Do → In Progress → In Review → Done. A task is moved to Done only when its pull request is merged into `main`. The space has 16 epics: PMP-1 … PMP-6, M1 … M8, and SRS and DESIGN for the requirements and design documents. It is connected to the GitHub repository through the GitHub for Atlassian app, so commits, branches and pull requests that start with a Jira key (e.g. `HLX-12`) appear under the related work item.
+The Jira space uses the Scrum template with the board columns To Do → In Progress → In Review → Done. A task is moved to Done only when its pull request is merged into `main`; a Jira automation rule does this automatically. The space has 16 epics: PMP-1 … PMP-6, M1 … M8, and SRS and DESIGN for the requirements and design documents. It is connected to the GitHub repository through the GitHub for Atlassian app, so commits, branches and pull requests that start with a Jira key (e.g. `HLX-12`) appear under the related work item.
 
 ### Team and Roles
 
