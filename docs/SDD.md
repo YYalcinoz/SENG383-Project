@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-06
+**Last updated:** 2026-11-07
 
 > Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
 > Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
@@ -19,6 +19,7 @@ flowchart LR
     User --> Frontend
     Frontend --> Backend["Backend / API"]
     Backend --> DB[(Database)]
+    Backend --> AI["AI service (Gemini API)"]
 ```
 
 ### Technology Stack
@@ -29,6 +30,7 @@ flowchart LR
 | Backend | Node.js + Express, JWT authentication |
 | Database | SQLite |
 | Testing | Jest + Supertest (backend), Vitest (frontend), Playwright (end-to-end) |
+| AI | Gemini API through `@google/genai`, with a mock mode for tests and CI |
 | CI | GitHub Actions |
 
 ---
@@ -46,7 +48,7 @@ flowchart LR
 | M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
 | M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
 | M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), `getWeekRange` from `utils/week.js` (shared with M8) to turn any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
-| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls external AI API with role-based prompts and mock mode for tests; uses `getWeekRange` from `utils/week.js` (shared with M7); stores "Helpful" / "Incorrect info" feedback in `ai_feedback`. Frontend: `SummaryPage` (summary, source links and feedback buttons) | FR-M8-01 … FR-M8-10 |
+| M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls the Gemini API only through the AI module in `server/src/ai/` (see [AI module](#ai-module-m8)), with role-based prompts and a mock mode for tests; uses `getWeekRange` from `utils/week.js` (shared with M7); stores "Helpful" / "Incorrect info" feedback in `ai_feedback`. Frontend: `SummaryPage` (summary, source links and feedback buttons) | FR-M8-01 … FR-M8-10 |
 
 ### Access control
 
@@ -73,6 +75,48 @@ Routers mounted under `/api/children/:childId` are created with `express.Router(
 All child-related endpoints use the prefix `/api/children/:childId/...`, so the same check applies to every module.
 
 The JWT is signed with `JWT_SECRET` from `.env` (optional, see `server/.env.example`; without it a random secret is created at startup, so no secret is stored in the repository), expires after 2 hours and is kept in the browser's localStorage. localStorage is readable by JavaScript, so an XSS bug could expose the token; we accept this for simplicity and reduce the risk by relying on React's default escaping (no `dangerouslySetInnerHTML`) and the short expiry.
+
+### AI module (M8)
+
+**Provider.** Gemini API, chosen by the team on 2026-11-07. The M8 developer has used the Gemini API before, and a free API key can be created in Google AI Studio. The backend uses the official Node.js SDK `@google/genai`.
+
+**One module.** Every AI call goes through `server/src/ai/`; `routes/summary.js` never calls the SDK directly.
+
+| File | Role |
+|---|---|
+| `ai/index.js` | `generateSummary({ role, week, records })`: chooses the mode, builds the prompt, calls the provider and returns the text |
+| `ai/prompts.js` | The parent prompt and the specialist prompt |
+| `ai/mock.js` | The mock summary |
+
+**Modes.**
+
+| `AI_MODE` | Behaviour |
+|---|---|
+| `mock` (default) | Returns a fixed summary built from the record counts, for example "This week, 3 of 5 tasks were completed." The same records always give the same text, so tests can check it. |
+| `gemini` | Sends the prompt to the Gemini API |
+
+In tests (`NODE_ENV=test`) the mode is always `mock`, whatever `.env` says, so tests and CI never call the external API. The server does not start, and says what is wrong, if `AI_MODE` has any value other than `mock` or `gemini` (so a typo does not silently fall back to the mock), or if `AI_MODE=gemini` and `GEMINI_API_KEY` is missing.
+
+**Configuration.** `AI_MODE`, `GEMINI_API_KEY` and `GEMINI_MODEL` are read from `server/.env`. The model name is not written in the code, because Gemini model names change often; the default is chosen from the Gemini documentation when M8 is implemented and noted in `server/.env.example`. The API key stays on the backend: it is never sent to the frontend and never committed, since `.env` is in `.gitignore`. On the Gemini API's free tier, Google may use the prompts and responses to improve its products, and human reviewers may read them; this is acceptable only because all data in the system is synthetic (NFR-03), and no real personal data may be sent.
+
+**Prompts (FR-M8-03, FR-M8-04).** There is one prompt for parents and one for specialists:
+
+- Parent: plain language; what was done this week and what is planned.
+- Specialist: grouped by development area, using the entry types (observation, session note, evaluation).
+
+Both prompts contain the same rules: use only the given records, say when information is missing, and never make decisions, diagnoses or treatment suggestions.
+
+**Prompt injection.** Task titles, event titles and specialist notes are text written by users, and they become part of the prompt. The records are therefore placed between delimiters (`<records>` … `</records>`) as data, and the prompt says that text inside the delimiters is data written by users and that any instructions in it must not be followed. This lowers the risk but cannot remove it, so the design does not depend on it: the model has no tools and no access to the database and sees only the records it was given, so the worst a malicious note can do is produce a wrong summary, which is shown labelled "AI-generated" with its source links.
+
+**Showing the answer.** The frontend shows the model's answer as plain text: React renders it as text, there is no `dangerouslySetInnerHTML`, and no Markdown library that produces HTML is used; line breaks are kept with CSS (`white-space: pre-line`). Even if the model returns HTML or a `<script>` tag, it appears as text, so the answer cannot become an XSS attack.
+
+**What is sent to the AI (FR-M8-02).** The backend first checks access (`requireRole`, `requireChildAccess`), then selects only the records of the selected week that the user may see, and sends only those. Writing "do not show restricted data" in a prompt is not access control, so restricted records are never sent at all. The backend does not add names, email addresses or ids: the child is called "the child", and each record is sent with only its type, date, title, development area, status or text. Free text such as titles and notes is sent as the user wrote it.
+
+**Source links (FR-M8-05).** The list of sources is built by the backend from the records it sent, not from the AI's answer, so a source invented by the model can never be shown. The frontend shows the summary with the "AI-generated" label and a link to each source record.
+
+**No records (FR-M8-09).** If the week has no tasks, calendar events or specialist entries, the backend does not call the AI and returns no summary, with a message.
+
+**Errors.** If the provider returns an error (including 429 when the free quota is used up) or does not answer within 15 seconds, the endpoint returns 502 and the rest of the application keeps working. The details are logged on the server and not sent to the client.
 
 ---
 
@@ -204,7 +248,7 @@ erDiagram
 | GET | `/api/children/:childId/entries` | List specialist entries for the child (parent and linked specialist only) | M5 |
 | POST | `/api/children/:childId/entries` | Add a specialist entry (linked specialist only) | M5 |
 | PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (marks as edited) | M5 |
-| GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week (parent and linked specialist only) | M8 |
+| GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week; defaults to the current week (parent and linked specialist only) | M8 |
 | POST | `/api/children/:childId/summary/feedback` | Rate the week's summary as helpful or incorrect, with `weekStart` and `rating`; replaces the user's earlier rating for that week (parent and linked specialist only) | M8 |
 
 ### Authentication API format
@@ -230,6 +274,25 @@ Header: `Authorization: Bearer <token>`
 | 200 | `{ "user": { "id": 1, "name": "...", "role": "parent" } }` |
 | 401 (no token) | `{ "error": "Authentication required" }` |
 | 401 (invalid or expired token) | `{ "error": "Invalid or expired token" }` |
+
+### AI summary API format
+
+**GET `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD`**
+
+Header: `Authorization: Bearer <token>`
+
+`weekStart` is optional and can be any day of the week; the server turns it into that week's Monday with `getWeekRange`. Without it, the current week is used.
+
+| Status | Response |
+|---|---|
+| 200 | `{ "summary": { "weekStart": "2026-11-02", "weekEnd": "2026-11-08", "text": "...", "aiGenerated": true, "sources": [{ "type": "task", "id": 12, "title": "Read for 20 minutes", "date": "2026-11-04" }] } }` |
+| 200 (no records in the week, FR-M8-09) | `{ "summary": null, "message": "There are no records for this week" }` |
+| 400 (invalid date) | `{ "error": "weekStart must be a date in YYYY-MM-DD format" }` |
+| 401 | Same as for every protected endpoint (see above) |
+| 403 | The user is a child, a parent of another child, or a specialist who is not linked to the child |
+| 502 | `{ "error": "The AI summary is not available right now" }` |
+
+`sources[].type` is `task`, `event` or `entry`. A week without records returns 200, not an error, because it is a normal state that the page shows as a message.
 
 ### AI summary feedback API format
 
@@ -278,12 +341,18 @@ sequenceDiagram
     actor Parent
     Parent->>Frontend: Open weekly summary
     Frontend->>Backend: GET /api/children/:childId/summary/weekly
-    Backend->>Database: Fetch week's tasks, schedule & entries
+    Backend->>Backend: authenticate, requireRole, requireChildAccess
+    Backend->>Database: Fetch the week's tasks, events and entries the user may see
     Database-->>Backend: Return authorized records
-    Backend->>AI Service: Send role-based prompt + data
-    AI Service-->>Backend: Return generated text
-    Backend-->>Frontend: Summary text + Source links
-    Frontend-->>Parent: Show summary labelled "AI-generated"
+    alt No records in the week
+        Backend-->>Frontend: No summary, with a message
+        Frontend-->>Parent: Show "There are no records for this week"
+    else Records found
+        Backend->>AI Service: Role-based prompt and records (mock in tests)
+        AI Service-->>Backend: Generated text
+        Backend-->>Frontend: Summary text and sources built by the backend
+        Frontend-->>Parent: Show summary labelled "AI-generated" with source links
+    end
 ```
 
 ---
@@ -309,3 +378,4 @@ sequenceDiagram
 | 2026-11-03 | Login and current user API format added | Yağız Yalçınöz |
 | 2026-11-06 | M5 observation date, M8 feedback table, endpoint and API format, and shared week helper added | Zeynep Dila Tetik |
 | 2026-11-06 | M3 calendar event time rules and date and time formats added | Zeynep Dila Tetik |
+| 2026-11-07 | AI module design (Gemini API, mock mode, prompts, prompt injection and output handling, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
