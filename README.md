@@ -66,7 +66,7 @@ cd client
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser. The page should show **"Backend status: ok"**. If it shows "unreachable", check that the backend in terminal 1 is running.
+Open http://localhost:5173 in your browser. The login page should open. Log in with one of the [demo accounts](#demo-accounts) below (password `password123`). If the page says "Cannot reach the server", check that the backend in terminal 1 is running.
 
 ## Running the tests
 
@@ -87,7 +87,7 @@ The same tests, plus a production build of the frontend, run automatically in Gi
 | Problem | Solution |
 |---|---|
 | `npm install` warns about an unsupported engine, or the app fails to start | Check `node -v`; Node.js 22 or later is required. |
-| The page shows "Backend status: unreachable" | Start the backend (`cd server` then `npm start`) and reload the page. |
+| The login page says "Cannot reach the server" | Start the backend (`cd server` then `npm start`) and reload the page. |
 | `Error: listen EADDRINUSE` on port 3000 | Another program (often an earlier backend that is still running) uses port 3000. Stop it and run `npm start` again; the frontend expects the backend on port 3000. |
 | Vite starts on 5174 instead of 5173 | Port 5173 is in use; open the address that Vite prints in the terminal. |
 
