@@ -1,25 +1,22 @@
 # Software Design Document (SDD)
 
 **Team name:** Team Helix  
-**Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-07
-
-> Keep this file at `docs/SDD.md`. Describe how the system is built; the SRS describes what it does.
-> Diagrams can be written in Mermaid (renders directly on GitHub) or added as images from `docs/img/`.
-> Delete the guidance notes (lines starting with `>`) when you fill in a section.
+**Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
+**Last updated:** 2026-11-08
 
 ---
 
 ## 1. Architecture Overview
 
-> Describe the overall structure in 2–3 sentences (e.g., client–server, layered, frontend + REST API + database) and add one diagram.
+The system is a client–server web application. A React single-page application runs in the browser and talks only to an Express REST API under `/api`; during development the Vite dev server forwards `/api` requests to the backend, so the browser never calls the backend directly. The backend checks the JWT and the user's access on every protected request, stores data in a single SQLite file, and is the only part that calls the AI service, so the API key and the child's records never reach the browser unchecked.
 
 ```mermaid
 flowchart LR
-    User --> Frontend
-    Frontend --> Backend["Backend / API"]
-    Backend --> DB[(Database)]
-    Backend --> AI["AI service (Gemini API)"]
+    User((User)) --> Frontend["React SPA (Vite)"]
+    Frontend -- "HTTP + JSON, /api/*, JWT" --> Backend["Express REST API"]
+    Backend --> DB[("SQLite (server/database.db)")]
+    Backend --> Files[("Uploaded files (server/uploads/)")]
+    Backend -- "only records the user may see" --> AI["Gemini API (mock in tests and CI)"]
 ```
 
 ### Technology Stack
@@ -36,8 +33,6 @@ flowchart LR
 ---
 
 ## 2. Module Design
-
-> One row per module (M1–M8, same as your SRS and Jira epics). Name the main components (classes, services, pages) that implement each module.
 
 | Module | Main components | Implements requirements |
 |---|---|---|
@@ -121,8 +116,6 @@ Both prompts contain the same rules: use only the given records, say when inform
 ---
 
 ## 3. Data Model
-
-> Main entities and their relationships. A simple ER diagram is enough.
 
 ```mermaid
 erDiagram
@@ -226,8 +219,6 @@ erDiagram
 
 ## 4. API / Interfaces
 
-> List the main endpoints or interfaces between components. Skip this section if your system has no API.
-
 | Method | Endpoint | Description | Module |
 |---|---|---|---|
 | POST | `/api/auth/login` | Log in with email and password, returns a JWT and the user | M1 |
@@ -317,24 +308,69 @@ Request: `{ "weekStart": "YYYY-MM-DD", "rating": "helpful" }` (`rating` is `help
 
 ## 5. Critical Flows
 
-> Use the same 3 critical flows as SRS Section 4. Add one sequence diagram for each.
-
-### Flow 1:
+### Flow 1: Linking a specialist
 
 ```mermaid
 sequenceDiagram
-    actor User
-    User->>Frontend: action
-    Frontend->>Backend: request
-    Backend->>Database: query
-    Database-->>Backend: result
-    Backend-->>Frontend: response
-    Frontend-->>User: result shown
+    actor Parent
+    actor Specialist
+    Parent->>Frontend: Enter the specialist's email and type
+    Frontend->>Backend: POST /api/children/:childId/specialists
+    Backend->>Backend: authenticate, requireRole('parent'), requireChildAccess
+    Backend->>Database: Find a user with this email and the role specialist
+    alt No registered specialist with this email
+        Backend-->>Frontend: 400 { error }
+        Frontend-->>Parent: Show the error (FR-M2-02)
+    else Specialist found
+        Backend->>Database: Insert into specialist_links
+        Backend-->>Frontend: 201 with the new link
+        Frontend-->>Parent: Specialist appears in the list (FR-M2-03)
+    end
+    Specialist->>Frontend: Open the child's records
+    Frontend->>Backend: GET /api/children/:childId/...
+    Backend->>Database: requireChildAccess finds the link
+    Backend-->>Frontend: 200 with the records (FR-M2-07)
+    Parent->>Frontend: Unlink the specialist and confirm (FR-M2-04)
+    Frontend->>Backend: DELETE /api/children/:childId/specialists/:specialistId
+    Backend->>Database: Delete the link
+    Backend-->>Frontend: 204
+    Specialist->>Frontend: Open the child's records again (token still valid)
+    Frontend->>Backend: GET /api/children/:childId/...
+    Backend->>Database: requireChildAccess finds no link
+    Backend-->>Frontend: 403 { error } (FR-M2-08)
 ```
 
-### Flow 2:
+### Flow 2: Assigning and completing a task
 
-### Flow 3:
+```mermaid
+sequenceDiagram
+    actor Specialist
+    actor Child
+    Specialist->>Frontend: Fill in title, description, development area and due date
+    Frontend->>Backend: POST /api/children/:childId/tasks
+    Backend->>Backend: authenticate, requireRole('parent', 'specialist'), requireChildAccess
+    alt Missing or invalid field
+        Backend-->>Frontend: 400 { error } (FR-M4-02)
+    else Valid
+        Backend->>Database: Insert task (status todo, assigner_id = current user)
+        Backend-->>Frontend: 201 with the task (FR-M4-01, FR-M4-03)
+    end
+    Child->>Frontend: Open "My tasks"
+    Frontend->>Backend: GET /api/children/:childId/tasks
+    Backend-->>Frontend: The child's own tasks (FR-M4-04)
+    Child->>Frontend: Mark a task as done
+    Frontend->>Backend: PATCH /api/children/:childId/tasks/:taskId/done
+    Backend->>Backend: requireRole('child'), requireChildAccess
+    Backend->>Database: Set status done and done_at
+    Backend-->>Frontend: 200 with the task (FR-M4-05)
+    Note over Backend: The same request from a parent or a specialist gets 403 (FR-M4-06)
+    Specialist->>Frontend: Open the child's tasks
+    Frontend->>Backend: GET /api/children/:childId/tasks
+    Backend-->>Frontend: All of the child's tasks with status and assigner (FR-M4-07)
+    Frontend-->>Specialist: The task is shown as done
+```
+
+### Flow 3: Weekly AI summary
 
 ```mermaid
 sequenceDiagram
@@ -359,11 +395,17 @@ sequenceDiagram
 
 ## 6. User Interface
 
-> Add sketches or screenshots of the main screens (hand-drawn wireframes are fine).
+The images are wireframes of the planned screens; the login and role home screens match the current application.
 
 | Screen | Image | Module |
 |---|---|---|
-| | `docs/img/…` | |
+| Login | ![Login](img/login.png) | M1 |
+| Parent home | ![Parent home](img/parent-home.png) | M1 |
+| Specialist home | ![Specialist home](img/specialist-home.png) | M1 |
+| Child home | ![Child home](img/child-home.png) | M1 |
+| Tasks (parent and specialist) | ![Tasks](img/tasks.png) | M4 |
+| My tasks (child) | ![My tasks](img/my-tasks.png) | M4 |
+| Weekly statistics | ![Weekly statistics](img/weekly-statistics.png) | M7 |
 
 ---
 
@@ -379,3 +421,4 @@ sequenceDiagram
 | 2026-11-06 | M5 observation date, M8 feedback table, endpoint and API format, and shared week helper added | Zeynep Dila Tetik |
 | 2026-11-06 | M3 calendar event time rules and date and time formats added | Zeynep Dila Tetik |
 | 2026-11-07 | AI module design (Gemini API, mock mode, prompts, prompt injection and output handling, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
+| 2026-11-08 | Architecture overview, Flow 1 and Flow 2 sequence diagrams and user interface wireframes added | Kerem Alp Ustaoğlu |
