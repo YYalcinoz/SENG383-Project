@@ -1,32 +1,29 @@
 # Software Requirements Specification (SRS)
 
 **Team name:** Team Helix  
-**Version:** ☐ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-01
-
-> Keep this file at `docs/SRS.md`. Keep it short and specific: every requirement should be testable.
-> Requirement IDs are used in Jira tasks, commits and tests, so do not renumber them once created.
-> Delete the guidance notes (lines starting with `>`) when you fill in a section.
+**Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
+**Last updated:** 2026-11-08
 
 ---
 
 ## 1. Introduction
 
-**Purpose of the system** (2–3 sentences):
+**Purpose of the system:**
+The platform is a web-based decision support platform that brings together the people who follow a child's development (parents, specialists and the child) around one shared schedule, task list and record of observations. An AI component summarizes the week's records for each reader according to their role. The AI only supports decisions: every summary is shown as a suggestion with the records it is based on, and a human decides.
 
 **Users of the system:**
 
 | User type | Description |
 |---|---|
-| | |
-| | |
+| Parent | Owns the child's data, sees all records, links and unlinks specialists, and adds schedule events and tasks. |
+| Specialist | A teacher, psychologist, doctor, special education teacher or coach who works only with the children linked to them; adds events, tasks and dated observations. |
+| Child | Sees only their own tasks and schedule and marks tasks as done. |
+
+**System accounts:** Accounts are created by the seed script; self-registration and an admin panel are out of scope.
 
 ---
 
 ## 2. Functional Requirements
-
-> Group requirements by module (M1–M8, same as your Jira epics). Use the format: "The system shall …".
-> Priority: **Must** (required for v1.0) / **Should** (planned) / **Could** (if time allows).
 
 ### M1 – Login and roles
 
@@ -135,8 +132,6 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 
 ## 3. Non-Functional Requirements
 
-> Keep only the ones that matter for your system (3–5 is enough). Make each one measurable.
-
 | ID | Category | Requirement |
 |---|---|---|
 | NFR-01 | Security | Passwords are stored only as bcrypt hashes; plain-text passwords are never stored or logged. |
@@ -149,20 +144,40 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 
 ## 4. Critical Flows and Acceptance Criteria
 
-> Choose the 3 most important user flows. Each one will have an end-to-end test (Week 10).
-> Write acceptance criteria as Given / When / Then.
-
 | Flow | Related requirements | Acceptance criteria |
 |---|---|---|
 | Flow 1: Linking a specialist | FR-M1-01, FR-M2-01, FR-M2-03, FR-M2-04, FR-M2-08 | **Given** a logged-in parent and a registered specialist **When** the parent links the specialist by email and type **Then** the specialist appears in the child's specialist list and can open the child's records; after the parent unlinks the specialist, the specialist's requests about the child return an error. |
-| Flow 2: Assigning and completing a task | FR-M4 (to be linked) | **Given** a specialist linked to a child **When** the specialist assigns a task and the child marks it as done **Then** the specialist sees the task as done. |
+| Flow 2: Assigning and completing a task | FR-M2-07, FR-M4-01, FR-M4-05, FR-M4-06, FR-M4-07 | **Given** a specialist linked to a child **When** the specialist assigns a task and the child marks it as done **Then** the specialist sees the task as done. |
 | Flow 3: Weekly AI summary | FR-M5-01, FR-M8-01, FR-M8-05 | **Given** specialist entries for the selected week **When** the parent opens the weekly summary **Then** a summary labelled "AI-generated" is shown with links to its source records. |
 
 ---
 
 ## 5. Use Case Diagram (optional)
 
-> A simple diagram showing users and main use cases. You can use Mermaid (renders on GitHub) or add an image from `docs/img/`.
+```mermaid
+flowchart LR
+    Parent([Parent])
+    Child([Child])
+    Specialist([Specialist])
+
+    subgraph Platform["Team Helix platform"]
+        UC1(Log in)
+        UC2(Link or unlink a specialist)
+        UC3(Add events and assign tasks)
+        UC4(View the child's schedule and tasks)
+        UC5(View own schedule and tasks)
+        UC6(Mark own task as done)
+        UC7(Add and edit specialist entries)
+        UC8(View specialist entries)
+        UC9(Upload and view documents)
+        UC10(View weekly statistics)
+        UC11(View the AI-generated weekly summary)
+    end
+
+    Parent --- UC1 & UC2 & UC3 & UC4 & UC8 & UC9 & UC10 & UC11
+    Child --- UC1 & UC5 & UC6
+    UC1 & UC3 & UC4 & UC7 & UC8 & UC9 & UC10 & UC11 --- Specialist
+```
 
 ---
 
@@ -175,3 +190,4 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 | 2026-10-30 | Non-functional requirements and critical flows added | Yağız Yalçınöz |
 | 2026-10-31 | M4 and M7 requirements added | Kerem Alp Ustaoğlu |
 | 2026-11-01 | M3, M5, and M8 requirements added | Zeynep Dila Tetik |
+| 2026-11-08 | Introduction, system accounts note, Flow 2 requirement links and use case diagram added | Kerem Alp Ustaoğlu |
