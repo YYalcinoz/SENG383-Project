@@ -4,13 +4,12 @@
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
 **Last updated:** 2026-11-08
 
-
 ---
 
 ## 1. Introduction
 
 **Purpose of the system:**
-Team Helix is a web-based decision support platform that brings together the people who follow a child's development (parents, specialists and the child) around one shared schedule, task list and record of observations. An AI component summarizes the week's records for each reader according to their role. The AI only supports decisions: every summary is shown as a suggestion with the records it is based on, and a human decides.
+The platform is a web-based decision support platform that brings together the people who follow a child's development (parents, specialists and the child) around one shared schedule, task list and record of observations. An AI component summarizes the week's records for each reader according to their role. The AI only supports decisions: every summary is shown as a suggestion with the records it is based on, and a human decides.
 
 **Users of the system:**
 
@@ -25,7 +24,6 @@ Team Helix is a web-based decision support platform that brings together the peo
 ---
 
 ## 2. Functional Requirements
-
 
 ### M1 – Login and roles
 
@@ -134,7 +132,6 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 
 ## 3. Non-Functional Requirements
 
-
 | ID | Category | Requirement |
 |---|---|---|
 | NFR-01 | Security | Passwords are stored only as bcrypt hashes; plain-text passwords are never stored or logged. |
@@ -146,7 +143,6 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 ---
 
 ## 4. Critical Flows and Acceptance Criteria
-
 
 | Flow | Related requirements | Acceptance criteria |
 |---|---|---|
@@ -161,24 +157,26 @@ Example: if 4 tasks are due in the week and 3 are done, the completion rate is 7
 ```mermaid
 flowchart LR
     Parent([Parent])
-    Specialist([Specialist])
     Child([Child])
+    Specialist([Specialist])
 
     subgraph Platform["Team Helix platform"]
         UC1(Log in)
         UC2(Link or unlink a specialist)
-        UC3(View and manage the weekly schedule)
-        UC4(Assign and view tasks)
-        UC5(Mark a task as done)
-        UC6(Add and view specialist entries)
-        UC7(Upload and view documents)
-        UC8(View weekly statistics)
-        UC9(View the AI-generated weekly summary)
+        UC3(Add events and assign tasks)
+        UC4(View the child's schedule and tasks)
+        UC5(View own schedule and tasks)
+        UC6(Mark own task as done)
+        UC7(Add and edit specialist entries)
+        UC8(View specialist entries)
+        UC9(Upload and view documents)
+        UC10(View weekly statistics)
+        UC11(View the AI-generated weekly summary)
     end
 
-    Parent --- UC1 & UC2 & UC3 & UC4 & UC6 & UC7 & UC8 & UC9
-    Specialist --- UC1 & UC3 & UC4 & UC6 & UC7 & UC8 & UC9
-    Child --- UC1 & UC3 & UC4 & UC5
+    Parent --- UC1 & UC2 & UC3 & UC4 & UC8 & UC9 & UC10 & UC11
+    Child --- UC1 & UC5 & UC6
+    UC1 & UC3 & UC4 & UC7 & UC8 & UC9 & UC10 & UC11 --- Specialist
 ```
 
 ---
