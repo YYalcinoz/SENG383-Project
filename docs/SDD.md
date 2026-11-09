@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-08
+**Last updated:** 2026-11-09
 
 ---
 
@@ -266,6 +266,44 @@ Header: `Authorization: Bearer <token>`
 | 401 (no token) | `{ "error": "Authentication required" }` |
 | 401 (invalid or expired token) | `{ "error": "Invalid or expired token" }` |
 
+### Children and specialist linking API format
+
+All endpoints need `Authorization: Bearer <token>`. Access errors (401, 403, invalid child id) follow the table in Section 2.
+
+**GET `/api/children`** (parent or specialist; a child gets 403)
+
+| Status | Response |
+|---|---|
+| 200 (parent) | `{ "children": [{ "id": 3, "name": "Zeynep Yılmaz" }] }` |
+| 200 (specialist) | `{ "children": [{ "id": 3, "name": "Zeynep Yılmaz", "specialistType": "teacher" }] }` |
+
+**GET `/api/children/:childId/specialists`** (the child's parent only)
+
+| Status | Response |
+|---|---|
+| 200 | `{ "specialists": [{ "id": 5, "name": "Mehmet Demir", "specialistType": "teacher", "linkedAt": "2026-11-09T10:00:00Z" }] }` |
+
+Email addresses are not returned. Only the parent sees the list: a specialist does not need to know which other specialists (for example a psychologist or a doctor) work with the child. `linkedAt` is in ISO 8601 UTC.
+
+**POST `/api/children/:childId/specialists`** (the child's parent only)
+
+Request: `{ "email": "...", "specialistType": "teacher" }`. `specialistType` is one of `teacher`, `psychologist`, `doctor`, `special education teacher`, `coach`. The email is trimmed and lower-cased.
+
+| Status | Response |
+|---|---|
+| 201 | `{ "specialist": { "id": 5, "name": "...", "specialistType": "teacher", "linkedAt": "..." } }` |
+| 400 | `{ "error": "Email is required" }` or `{ "error": "Specialist type must be one of: ..." }` |
+| 400 | `{ "error": "No registered specialist with this email" }`, the same for an unknown email and for the email of a parent or a child (FR-M2-02) |
+| 409 | `{ "error": "This specialist is already linked to the child" }` |
+
+**DELETE `/api/children/:childId/specialists/:specialistId`** (the child's parent only; the confirmation step is in the UI)
+
+| Status | Response |
+|---|---|
+| 204 | No body. The specialist loses access on their next request (FR-M2-08). |
+| 400 | `{ "error": "Invalid specialist id" }` |
+| 404 | `{ "error": "This specialist is not linked to the child" }` |
+
 ### AI summary API format
 
 **GET `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD`**
@@ -422,3 +460,4 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-06 | M3 calendar event time rules and date and time formats added | Zeynep Dila Tetik |
 | 2026-11-07 | AI module design (Gemini API, mock mode, prompts, prompt injection and output handling, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
 | 2026-11-08 | Architecture overview, Flow 1 and Flow 2 sequence diagrams and user interface wireframes added | Kerem Alp Ustaoğlu |
+| 2026-11-09 | Children and specialist linking API format added | Yağız Yalçınöz |
