@@ -1,5 +1,7 @@
 const express = require('express');
 const authRoutes = require('./routes/auth');
+const childrenRoutes = require('./routes/children');
+const specialistRoutes = require('./routes/specialists');
 
 const app = express();
 app.use(express.json());
@@ -9,6 +11,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/children', childrenRoutes);
+app.use('/api/children/:childId/specialists', specialistRoutes);
 
 // Tüm hatalar { error } biçiminde dönsün; 500'lerde iç detay sızmasın
 app.use((err, req, res, next) => {
