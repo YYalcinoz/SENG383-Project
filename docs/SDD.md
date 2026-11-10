@@ -224,7 +224,7 @@ erDiagram
 | POST | `/api/auth/login` | Log in with email and password, returns a JWT and the user | M1 |
 | GET | `/api/auth/me` | Current user (id, name, role) | M1 |
 | GET | `/api/children` | Children of the current parent, or children linked to the current specialist | M2 |
-| GET | `/api/children/:childId/specialists` | List specialists linked to the child | M2 |
+| GET | `/api/children/:childId/specialists` | List specialists linked to the child (parent only) | M2 |
 | POST | `/api/children/:childId/specialists` | Link a specialist by email and type (parent only) | M2 |
 | DELETE | `/api/children/:childId/specialists/:specialistId` | Unlink a specialist (parent only) | M2 |
 | GET | `/api/children/:childId/documents` | List the child's documents | M6 |
