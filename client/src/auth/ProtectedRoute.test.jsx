@@ -5,9 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import App from '../App.jsx'
 import { getToken, setToken } from '../api.js'
 import { AuthProvider } from './AuthContext.jsx'
-
-const jsonResponse = (body, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+import { respondWith } from '../testUtils.js'
 
 const renderAt = (path) =>
   render(
@@ -57,7 +55,7 @@ const crossRole = [
 
 test.each(crossRole)('a %s who opens the %s page is sent to their own home page', async (role, other) => {
   setToken('good')
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ user: { id: 1, name: 'Test', role } }))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ user: { id: 1, name: 'Test', role } }))
 
   renderAt(PATH[other])
 
@@ -68,7 +66,7 @@ test.each(crossRole)('a %s who opens the %s page is sent to their own home page'
 test('someone sent to the login page from another role page ends up on their own home page after logging in', async () => {
   const fetchSpy = vi
     .spyOn(globalThis, 'fetch')
-    .mockResolvedValue(jsonResponse({ token: 't', user: { id: 1, name: 'Ayşe', role: 'parent' } }))
+    .mockImplementation(respondWith({ token: 't', user: { id: 1, name: 'Ayşe', role: 'parent' } }))
   const user = userEvent.setup()
   renderAt('/child')
 
@@ -78,12 +76,13 @@ test('someone sent to the login page from another role page ends up on their own
 
   expect(await screen.findByRole('heading', { name: 'Parent home' })).toBeTruthy()
   expect(screen.queryByRole('heading', { name: 'Child home' })).toBeNull()
-  expect(fetchSpy).toHaveBeenCalledTimes(1)
+  // Tek bir login isteği; sonra ana sayfa çocuk listesini ister
+  expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children'])
 })
 
 test('Log out removes the token and shows the login page', async () => {
   setToken('good')
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ user: { id: 1, name: 'Test', role: 'parent' } }))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ user: { id: 1, name: 'Test', role: 'parent' } }))
   const user = userEvent.setup()
   renderAt('/parent')
   await screen.findByRole('heading', { name: 'Parent home' })

@@ -4,9 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import App from './App.jsx'
 import { getToken, setToken } from './api.js'
 import { AuthProvider } from './auth/AuthContext.jsx'
-
-const jsonResponse = (body, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+import { respondWith } from './testUtils.js'
 
 const renderApp = (path = '/') =>
   render(
@@ -44,7 +42,7 @@ test.each([
   ['child', 'Child home'],
 ])('a logged-in %s is sent from / to their own home page', async (role, heading) => {
   setToken('good')
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ user: { id: 1, name: 'Test', role } }))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ user: { id: 1, name: 'Test', role } }))
 
   renderApp('/')
 
@@ -53,7 +51,7 @@ test.each([
 
 test('a logged-in user who opens /login is sent to their home page', async () => {
   setToken('good')
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ user: { id: 1, name: 'Test', role: 'parent' } }))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ user: { id: 1, name: 'Test', role: 'parent' } }))
 
   renderApp('/login')
 
@@ -72,7 +70,7 @@ test('while the user is being loaded it shows Loading and does not show the logi
 
 test('an invalid token is removed and the visitor lands on the login page', async () => {
   setToken('abc')
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ error: 'Invalid or expired token' }, 401))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ error: 'Invalid or expired token' }, 401))
 
   renderApp('/')
 
