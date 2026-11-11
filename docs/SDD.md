@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-09
+**Last updated:** 2026-11-10
 
 ---
 
@@ -37,7 +37,7 @@ flowchart LR
 | Module | Main components | Implements requirements |
 |---|---|---|
 | M1 – Login and roles | Backend: `routes/auth.js` (login, current user), `middleware/auth.js` (`authenticate`, `requireRole`), bcryptjs for password hashing, jsonwebtoken. Frontend: `LoginPage`, `AuthContext` (keeps the token and the current user), `ProtectedRoute` (role-based routing) | FR-M1-01 … FR-M1-08 |
-| M2 – Linking specialists | Backend: `routes/children.js` (children of the current user), `routes/specialists.js` (link, list, unlink), `middleware/childAccess.js` (`requireChildAccess`). Frontend: `LinkedSpecialistsPage` (parent), `MyChildrenPage` (specialist) | FR-M2-01 … FR-M2-08 |
+| M2 – Linking specialists | Backend: `routes/children.js` (children of the current user), `routes/specialists.js` (link, list, unlink), `middleware/childAccess.js` (`requireChildAccess`). Frontend: `ChildList` on the parent and specialist home pages (each child with links to that child's modules), `LinkedSpecialistsPage` (parent) | FR-M2-01 … FR-M2-08 |
 | M3 – Weekly schedule | Backend: `routes/schedule.js` (create, list), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, date, time and event type. Frontend: `SchedulePage` (parent and specialist), `MySchedulePage` (child) | FR-M3-01 … FR-M3-06 |
 | M4 – Tasks | Backend: `routes/tasks.js` (create, list, mark done), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, development area and due date. Frontend: `TasksPage` (parent and specialist: task list and "assign task" form), `MyTasksPage` (child: own tasks and "mark as done") | FR-M4-01 … FR-M4-09 |
 | M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
@@ -433,7 +433,7 @@ sequenceDiagram
 
 ## 6. User Interface
 
-The images are wireframes of the planned screens; the login and role home screens match the current application.
+The images are wireframes of the planned screens; the login and role home screens match the current application, except that the parent and specialist home screens now list each child with that child's modules (HLX-61).
 
 | Screen | Image | Module |
 |---|---|---|
@@ -461,3 +461,4 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-07 | AI module design (Gemini API, mock mode, prompts, prompt injection and output handling, data sent to the AI), summary API format and Flow 3 updated | Zeynep Dila Tetik |
 | 2026-11-08 | Architecture overview, Flow 1 and Flow 2 sequence diagrams and user interface wireframes added | Kerem Alp Ustaoğlu |
 | 2026-11-09 | Children and specialist linking API format added | Yağız Yalçınöz |
+| 2026-11-10 | Child list on the parent and specialist home pages | Yağız Yalçınöz |

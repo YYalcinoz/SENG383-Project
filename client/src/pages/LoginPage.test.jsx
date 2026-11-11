@@ -5,9 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import App from '../App.jsx'
 import { getToken } from '../api.js'
 import { AuthProvider } from '../auth/AuthContext.jsx'
-
-const jsonResponse = (body, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+import { jsonResponse, respondWith } from '../testUtils.js'
 
 const renderLogin = () =>
   render(
@@ -46,7 +44,7 @@ test.each([
 ])('a %s who logs in correctly is sent to their own home page', async (role, email, heading) => {
   const fetchSpy = vi
     .spyOn(globalThis, 'fetch')
-    .mockResolvedValue(jsonResponse({ token: 'new-token', user: { id: 1, name: 'Test', role } }))
+    .mockImplementation(respondWith({ token: 'new-token', user: { id: 1, name: 'Test', role } }))
   const user = userEvent.setup()
   renderLogin()
 
@@ -63,7 +61,7 @@ test.each([
 test('can be submitted with the Enter key', async () => {
   const fetchSpy = vi
     .spyOn(globalThis, 'fetch')
-    .mockResolvedValue(jsonResponse({ token: 't', user: { id: 1, name: 'Test', role: 'parent' } }))
+    .mockImplementation(respondWith({ token: 't', user: { id: 1, name: 'Test', role: 'parent' } }))
   const user = userEvent.setup()
   renderLogin()
 
@@ -71,11 +69,12 @@ test('can be submitted with the Enter key', async () => {
   await user.type(screen.getByLabelText('Password'), 'password123{Enter}')
 
   expect(await screen.findByRole('heading', { name: 'Parent home' })).toBeTruthy()
-  expect(fetchSpy).toHaveBeenCalledTimes(1)
+  // Tek bir login isteği; sonra ana sayfa çocuk listesini ister
+  expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children'])
 })
 
 test('a wrong password shows the backend message, stores no token and clears the password', async () => {
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ error: 'Invalid email or password' }, 401))
+  vi.spyOn(globalThis, 'fetch').mockImplementation(respondWith({ error: 'Invalid email or password' }, 401))
   const user = userEvent.setup()
   renderLogin()
 
