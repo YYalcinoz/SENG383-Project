@@ -4,6 +4,7 @@ import RedirectIfAuthenticated from './auth/RedirectIfAuthenticated.jsx'
 import RootRedirect from './auth/RootRedirect.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import ChildHome from './pages/ChildHome.jsx'
+import LinkedSpecialistsPage from './pages/LinkedSpecialistsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import ParentHome from './pages/ParentHome.jsx'
 import SpecialistHome from './pages/SpecialistHome.jsx'
@@ -32,6 +33,7 @@ export default function App() {
         }
       >
         <Route path="/parent" element={<ParentHome />} />
+        <Route path="/parent/children/:childId/specialists" element={<LinkedSpecialistsPage />} />
       </Route>
 
       <Route

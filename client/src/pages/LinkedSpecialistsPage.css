@@ -1,0 +1,98 @@
+.specialists-page {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  padding: 0 16px 32px;
+}
+
+.specialists-page section {
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+}
+
+.specialists-page h3 {
+  margin: 8px 0;
+  color: var(--text-h);
+}
+
+.specialist-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.specialist-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.specialist-list strong {
+  color: var(--text-h);
+}
+
+.link-form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 4px;
+}
+
+.form-field label {
+  color: var(--text-h);
+}
+
+.form-field input,
+.form-field select {
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.specialists-page button {
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.specialists-page button:disabled {
+  cursor: not-allowed;
+}
+
+.notice:empty {
+  display: none;
+}
+
+.form-error {
+  margin: 0;
+  color: #c62828;
+}
+
+/* Koyu modda koyu kırmızı zor okunuyor, daha açık bir ton kullan */
+@media (prefers-color-scheme: dark) {
+  .form-error {
+    color: #ff8a80;
+  }
+}
+
+.specialist-list .confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
