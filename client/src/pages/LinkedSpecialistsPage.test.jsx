@@ -334,3 +334,37 @@ test('switching to another child never shows the previous child\'s specialists',
   expect((await screen.findByRole('status')).textContent).toBe('Loading…')
   expect(screen.queryByText('Mehmet Demir')).toBeNull()
 })
+
+// --- Keyboard focus after the confirmation closes ---
+
+test('Cancel returns the focus to that specialist\'s Unlink button', async () => {
+  const user = userEvent.setup()
+  await renderPage()
+
+  await user.click(screen.getByRole('button', { name: 'Unlink Mehmet Demir' }))
+  await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Unlink Mehmet Demir' }))
+})
+
+test('after a successful unlink the focus moves to the Specialists heading', async () => {
+  const user = userEvent.setup()
+  await renderPage(PAGE, { del: () => new Response(null, { status: 204 }) })
+
+  await user.click(screen.getByRole('button', { name: 'Unlink Mehmet Demir' }))
+  await user.click(screen.getByRole('button', { name: 'Yes, unlink' }))
+
+  await screen.findByText('Mehmet Demir is no longer linked.')
+  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Specialists' }))
+})
+
+test('after a failed unlink the focus returns to that specialist\'s Unlink button', async () => {
+  const user = userEvent.setup()
+  await renderPage(PAGE, { del: () => jsonResponse({ error: 'Internal server error' }, 500) })
+
+  await user.click(screen.getByRole('button', { name: 'Unlink Mehmet Demir' }))
+  await user.click(screen.getByRole('button', { name: 'Yes, unlink' }))
+
+  await screen.findByRole('alert')
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Unlink Mehmet Demir' }))
+})

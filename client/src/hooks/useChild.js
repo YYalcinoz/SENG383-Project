@@ -12,6 +12,9 @@ export const VALID_CHILD_ID = /^[1-9]\d{0,9}$/
 // Çocuk, kullanıcının görebildiği çocuklar listesinden (GET /api/children) bulunur; listede
 // yoksa "Child not found" döner. Bu yalnızca arayüz içindir: modülün kendi endpoint'i yine
 // requireChildAccess ile korunur ve asıl kontrol oradadır.
+//
+// Yalnızca parent ve specialist sayfaları içindir: GET /api/children çocuğa 403 döner.
+// Çocuğun kendi sayfaları childId olarak useAuth()'taki user.id'yi kullanır.
 export function useChild(childId) {
   const validId = VALID_CHILD_ID.test(childId ?? '')
   // Sonuç hangi childId için olduğunu tutar; id değişince eski çocuk bir an bile gösterilmez

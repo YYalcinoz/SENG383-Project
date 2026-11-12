@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useParams } from 'react-router-dom'
 import { apiFetch } from '../api.js'
 import Loading from '../components/Loading.jsx'
@@ -33,6 +34,9 @@ export default function LinkedSpecialistsPage() {
   // Süren istek: 'link' | 'unlink' | null. Sürerken tüm butonlar kapalı, ikinci istek atılmaz
   const [busy, setBusy] = useState(null)
   const [confirmingId, setConfirmingId] = useState(null)
+  // Onay kapanınca klavye odağı kaybolmasın diye: her uzmanın Unlink butonu ve liste başlığı
+  const unlinkButtons = useRef(new Map())
+  const listHeading = useRef(null)
 
   const base = `/api/children/${encodeURIComponent(childId)}/specialists`
 
@@ -98,9 +102,24 @@ export default function LinkedSpecialistsPage() {
       if (err.status === 404) removeFromList(specialist.id)
       setUnlinkError(err.message)
     } finally {
-      setConfirmingId(null)
-      setBusy(null)
+      flushSync(() => {
+        setConfirmingId(null)
+        setBusy(null)
+      })
+      returnFocus(specialist.id)
     }
+  }
+
+  function cancelUnlink(id) {
+    flushSync(() => setConfirmingId(null))
+    returnFocus(id)
+  }
+
+  // Onay kapanınca odak sayfanın başına düşmesin: uzman listede duruyorsa onun Unlink
+  // butonuna, kaldırıldıysa listenin başlığına döner. flushSync, buton ekrana gelmeden
+  // odaklanmaya çalışmamak için önce render'ı bitirir.
+  function returnFocus(id) {
+    ;(unlinkButtons.current.get(id) ?? listHeading.current)?.focus()
   }
 
   function removeFromList(id) {
@@ -146,7 +165,9 @@ export default function LinkedSpecialistsPage() {
       )}
 
       <section aria-labelledby="linked-title">
-        <h3 id="linked-title">Specialists</h3>
+        <h3 id="linked-title" ref={listHeading} tabIndex={-1}>
+          Specialists
+        </h3>
         {specialists.length === 0 ? (
           <p>No specialists are linked to {child.name} yet.</p>
         ) : (
@@ -166,7 +187,7 @@ export default function LinkedSpecialistsPage() {
                     {/* Odak güvenli seçeneğe gelir: yanlışlıkla Enter'a basmak bağlantıyı kaldırmaz */}
                     <button
                       type="button"
-                      onClick={() => setConfirmingId(null)}
+                      onClick={() => cancelUnlink(s.id)}
                       disabled={Boolean(busy)}
                       autoFocus
                     >
@@ -176,6 +197,10 @@ export default function LinkedSpecialistsPage() {
                 ) : (
                   <button
                     type="button"
+                    ref={(el) => {
+                      if (el) unlinkButtons.current.set(s.id, el)
+                      else unlinkButtons.current.delete(s.id)
+                    }}
                     onClick={() => setConfirmingId(s.id)}
                     disabled={Boolean(busy)}
                     aria-label={`Unlink ${s.name}`}

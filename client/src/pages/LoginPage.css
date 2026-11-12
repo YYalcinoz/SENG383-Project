@@ -26,14 +26,7 @@
 
 .login-error {
   margin: 0;
-  color: #c62828;
-}
-
-/* Koyu modda koyu kırmızı zor okunuyor, daha açık bir ton kullan */
-@media (prefers-color-scheme: dark) {
-  .login-error {
-    color: #ff8a80;
-  }
+  color: var(--error);
 }
 
 .login-form button {
