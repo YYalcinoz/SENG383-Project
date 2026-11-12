@@ -3,7 +3,7 @@ import { useAuth } from '../auth/useAuth.js'
 
 // Her çocuğun altında gösterilen modüller; sayfası eklenince slug ekle (ör. slug: 'tasks')
 const MODULES = [
-  { label: 'Specialists' },
+  { label: 'Specialists', slug: 'specialists' },
   { label: 'Tasks' },
   { label: 'Schedule' },
   { label: 'Entries' },
