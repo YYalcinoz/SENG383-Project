@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+# Workflow yalnızca kodu okur; GITHUB_TOKEN'a yazma izni verilmez
+permissions:
+  contents: read
+
+# Aynı PR'a yeni bir commit gelince eski çalışma iptal edilir, CI boşa uğraşmaz
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,18 +33,74 @@ jobs:
         run: npm ci
         working-directory: server
 
-      - name: Run server tests
-        run: npm test
+      - name: Run server tests with coverage
+        run: npm run test:coverage
         working-directory: server
 
       - name: Install client dependencies
         run: npm ci
         working-directory: client
 
-      - name: Run client tests
-        run: npm test
+      - name: Lint client
+        run: npm run lint
+        working-directory: client
+
+      - name: Run client tests with coverage
+        run: npm run test:coverage
         working-directory: client
 
       - name: Build client
         run: npm run build
         working-directory: client
+
+      # Testler kırmızı olsa da çalışır, böylece ne kadar kod test edildiği her zaman görünür
+      - name: Write coverage summary
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/coverage-summary.mjs server/coverage client/coverage
+
+      - name: Upload coverage reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage
+          path: |
+            server/coverage/
+            client/coverage/
+          retention-days: 14
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+            e2e/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix server
+          npm ci --prefix client
+          npm ci --prefix e2e
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      # Playwright backend'i (kendi seed'li veritabanıyla) ve frontend'i kendisi başlatır
+      - name: Run end-to-end tests
+        run: npm test
+        working-directory: e2e
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14

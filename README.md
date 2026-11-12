@@ -70,6 +70,8 @@ Open http://localhost:5173 in your browser. The login page should open. Log in w
 
 ## Running the tests
 
+Unit and API tests:
+
 ```bash
 cd server
 npm test
@@ -80,7 +82,20 @@ cd client
 npm test
 ```
 
-The same tests, plus a production build of the frontend, run automatically in GitHub Actions on every pull request.
+Add `:coverage` (`npm run test:coverage`) to also measure test coverage; the HTML report is written to `coverage/index.html` in the same folder. The tests fail if branch coverage drops below 60% (NFR-05).
+
+End-to-end tests (Playwright) start the backend and the frontend themselves and log in through a real browser:
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium   # once; on Linux/WSL use --with-deps if the browser fails to start
+npm test
+```
+
+They use their own database file (`e2e/.data/e2e.db`) and ports (3100 and 5180), so they never touch `server/database.db` and can run while the app is running on 3000 and 5173. After a failure, `npm run report` opens a report with a trace of each step.
+
+In GitHub Actions, every pull request runs the server and client tests with coverage, the client linter, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
 
 ## Troubleshooting
 
@@ -135,6 +150,7 @@ server/                  Express backend
   src/db/database.js     SQLite connection and tables
   scripts/seed.js        Creates synthetic sample data
   tests/                 Jest + Supertest tests
+e2e/                     Playwright end-to-end tests
 docs/                    SRS, SDD and PMP
 .github/workflows/       CI (GitHub Actions)
 ```
