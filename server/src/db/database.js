@@ -55,6 +55,25 @@ db.serialize(() => {
     event_type TEXT NOT NULL CHECK(event_type IN ('school', 'support', 'health', 'sports', 'other')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  // M4: görevler. due_date, calendar_events.event_date ile aynı kuralla YYYY-MM-DD
+  // olarak saklanır ve biçim veritabanında da kontrol edilir (M7 haftalık sayımı
+  // tarihleri metin olarak karşılaştırır). description boş bırakılabilir, bu yüzden
+  // varsayılanı ''. done_at yalnızca çocuk görevi bitirince dolar.
+  db.run(`CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id INTEGER NOT NULL REFERENCES users(id),
+    assigner_id INTEGER NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+    description TEXT NOT NULL DEFAULT '',
+    development_area TEXT NOT NULL CHECK(development_area IN (
+      'motor', 'language', 'cognitive', 'social-emotional', 'self-care'
+    )),
+    due_date TEXT NOT NULL CHECK(date(due_date) IS due_date),
+    status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo', 'done')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    done_at TEXT
+  )`);
 });
 
 module.exports = db;
