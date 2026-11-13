@@ -7,6 +7,7 @@ import ChildHome from './pages/ChildHome.jsx'
 import LinkedSpecialistsPage from './pages/LinkedSpecialistsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import ParentHome from './pages/ParentHome.jsx'
+import SchedulePage from './pages/SchedulePage.jsx'
 import SpecialistHome from './pages/SpecialistHome.jsx'
 
 // Yeni sayfa eklemek için: sayfa bileşenini src/pages altında yaz ve o rolün <Route> grubuna ekle,
@@ -34,6 +35,7 @@ export default function App() {
       >
         <Route path="/parent" element={<ParentHome />} />
         <Route path="/parent/children/:childId/specialists" element={<LinkedSpecialistsPage />} />
+        <Route path="/parent/children/:childId/schedule" element={<SchedulePage />} />
       </Route>
 
       <Route
@@ -44,6 +46,7 @@ export default function App() {
         }
       >
         <Route path="/specialist" element={<SpecialistHome />} />
+        <Route path="/specialist/children/:childId/schedule" element={<SchedulePage />} />
       </Route>
 
       <Route

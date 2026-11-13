@@ -5,7 +5,7 @@ import { useAuth } from '../auth/useAuth.js'
 const MODULES = [
   { label: 'Specialists', slug: 'specialists' },
   { label: 'Tasks' },
-  { label: 'Schedule' },
+  { label: 'Schedule', slug: 'schedule' },
   { label: 'Entries' },
   { label: 'Documents' },
   { label: 'Statistics' },
