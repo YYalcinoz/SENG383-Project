@@ -16,6 +16,12 @@
   color: var(--text-h);
 }
 
+/* Çocuğun program sayfasında bölüm başlığının altındaki tarih aralığı */
+.week-range {
+  margin: 0 0 8px;
+  font-size: 0.9em;
+}
+
 .week-nav {
   display: flex;
   flex-wrap: wrap;

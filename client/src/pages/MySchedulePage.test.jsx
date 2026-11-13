@@ -207,6 +207,18 @@ test.each([
   expect((await screen.findByRole('alert')).textContent).toBe('Unexpected response from the server')
 })
 
+// İlk istek doğru, ikincisi bozuk: ikinci cevap da aynı kontrolden geçmeli
+test.each([
+  ['weekStart is missing', { events: [] }],
+  ['weekStart is not a date', { weekStart: 'monday', events: [] }],
+  ['events is not a list', { weekStart: '2026-11-23', events: null }],
+])('shows an error instead of crashing when %s in the response for next week', async (_name, body) => {
+  await renderPage({ routes: { [`GET ${NEXT}`]: () => jsonResponse(body) } })
+
+  expect((await screen.findByRole('alert')).textContent).toBe('Unexpected response from the server')
+  expect(screen.queryByRole('region', { name: 'This week' })).toBeNull()
+})
+
 test('shows "Cannot reach the server" when the request fails', async () => {
   setToken('good')
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
