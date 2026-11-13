@@ -6,7 +6,7 @@ const app = require('../src/app');
 const db = require('../src/db/database');
 const { jwtSecret } = require('../src/config');
 const { get, run } = require('../src/db/helpers');
-const { getWeekRange } = require('../src/utils/week');
+const { getWeekRange, today } = require('../src/utils/week');
 
 const users = {};
 const tokenFor = (key) =>
@@ -298,13 +298,21 @@ describe('GET /api/children/:childId/schedule', () => {
     expect(res.body).toEqual({ weekStart: '2026-12-21', weekEnd: '2026-12-27', events: [] });
   });
 
-  test('without weekStart it gives the current week', async () => {
+  test("without weekStart it gives the current week, with that week's events", async () => {
+    // Bugün ve tam bir hafta sonrası; test hangi gün çalışırsa çalışsın ilki bu haftada, ikincisi dışında
+    const nextWeek = new Date(`${today()}T00:00:00Z`);
+    nextWeek.setUTCDate(nextWeek.getUTCDate() + 7);
+    await insertEvent('Zeynep', 'Ayse', 'Today at school', today(), '08:30', null, 'school');
+    await insertEvent('Zeynep', 'Ayse', 'A week from today', nextWeek.toISOString().slice(0, 10), '08:30', null, 'school');
+
     const res = await listWeek('Ayse', 'Zeynep');
     const week = getWeekRange();
 
     expect(res.status).toBe(200);
     expect(res.body.weekStart).toBe(week.start);
     expect(res.body.weekEnd).toBe(week.end);
+    expect(res.body.events.map((e) => e.title)).toContain('Today at school');
+    expect(res.body.events.map((e) => e.title)).not.toContain('A week from today');
   });
 
   test.each(['2026/12/07', '2026-02-30', 'abc', ''])('rejects weekStart %j with 400', async (weekStart) => {
