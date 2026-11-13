@@ -2,6 +2,7 @@ const express = require('express');
 const authRoutes = require('./routes/auth');
 const childrenRoutes = require('./routes/children');
 const specialistRoutes = require('./routes/specialists');
+const taskRoutes = require('./routes/tasks');
 
 const app = express();
 app.use(express.json());
@@ -20,5 +21,7 @@ app.use((err, req, res, next) => {
   if (status >= 500) console.error(err);
   res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
 });
+
+app.use('/api/children/:childId/tasks', taskRoutes);
 
 module.exports = app;
