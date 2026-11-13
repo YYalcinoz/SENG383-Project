@@ -342,7 +342,6 @@ Request: `{ "weekStart": "YYYY-MM-DD", "rating": "helpful" }` (`rating` is `help
 | 401 | Same as for every protected endpoint (see above) |
 | 403 | The user is a child, a parent of another child, or a specialist who is not linked to the child |
 
-
 ### Calendar events API format
 
 All endpoints need `Authorization: Bearer <token>`. Access errors (401, 403, invalid child id) follow the table in Section 2. `eventDate` is a plain date (`YYYY-MM-DD`), `startTime` and `endTime` are `HH:MM` (00:00–23:59), `endTime` is `null` when it was not given, `createdAt` is ISO 8601 UTC, and `eventType` is one of `school`, `support`, `health`, `sports`, `other`. An event looks like this:
@@ -369,6 +368,7 @@ Request: `{ "title": "...", "eventDate": "2026-11-18", "startTime": "16:00", "en
 | 201 | `{ "event": { ... } }` |
 | 400 (missing field, FR-M3-02) | `{ "error": "Title is required" }`, `{ "error": "Date is required" }` or `{ "error": "Start time is required" }` |
 | 400 (invalid field) | `{ "error": "Title must be at most 200 characters" }`, `{ "error": "Date must be a valid date in YYYY-MM-DD format" }`, `{ "error": "Start time must be a time in HH:MM format" }`, `{ "error": "End time must be a time in HH:MM format" }`, `{ "error": "End time must be after the start time" }` or `{ "error": "Event type must be one of: school, support, health, sports, other" }` |
+
 ---
 
 ## 5. Critical Flows
