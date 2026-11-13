@@ -4,20 +4,16 @@ import { apiFetch } from '../api.js'
 import { useAuth } from '../auth/useAuth.js'
 import { ROLE_HOME } from '../auth/roles.js'
 import Loading from '../components/Loading.jsx'
+import WeekDays from '../components/WeekDays.jsx'
 import { useChild, VALID_CHILD_ID } from '../hooks/useChild.js'
-import { addDays, formatDate, formatDay, isValidDate, weekDays, weekStartOf } from '../utils/week.js'
+import { byDateAndTime } from '../utils/events.js'
+import { addDays, formatDate, isValidDate, weekStartOf } from '../utils/week.js'
 import './SchedulePage.css'
 
 // Backend'deki EVENT_TYPES ile aynı olmalı (server/src/routes/schedule.js)
 const EVENT_TYPES = ['school', 'support', 'health', 'sports', 'other']
 
 const EMPTY_FORM = { title: '', eventDate: '', startTime: '', endTime: '', eventType: '' }
-
-// Backend'in sırasıyla aynı: tarih, başlangıç saati, id
-const byDateAndTime = (a, b) =>
-  a.eventDate.localeCompare(b.eventDate) || a.startTime.localeCompare(b.startTime) || a.id - b.id
-
-const timeOf = (event) => (event.endTime ? `${event.startTime}–${event.endTime}` : event.startTime)
 
 // FR-M3-01 … FR-M3-03: the parent and linked specialists see the child's events for one
 // week and add new events. Access is enforced by the backend (requireChildAccess); this
@@ -169,30 +165,7 @@ export default function SchedulePage() {
               </button>
             </div>
 
-            <ol className="week-days">
-              {weekDays(load.weekStart).map((day) => {
-                const events = load.events.filter((e) => e.eventDate === day)
-                return (
-                  <li key={day} className="week-day" aria-labelledby={`day-${day}`}>
-                    <h4 id={`day-${day}`}>{formatDay(day)}</h4>
-                    {events.length === 0 ? (
-                      <p className="no-events">No events</p>
-                    ) : (
-                      <ul className="event-list">
-                        {events.map((e) => (
-                          <li key={e.id}>
-                            <span className="event-time">{timeOf(e)}</span>
-                            {/* Düz metin olarak gösterilir, HTML olarak eklenmez */}
-                            <span className="event-title">{e.title}</span>
-                            <span className="event-type">{e.eventType}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                )
-              })}
-            </ol>
+            <WeekDays weekStart={load.weekStart} events={load.events} />
           </>
         )}
       </section>

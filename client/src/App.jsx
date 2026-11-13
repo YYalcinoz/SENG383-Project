@@ -6,6 +6,7 @@ import AppLayout from './components/AppLayout.jsx'
 import ChildHome from './pages/ChildHome.jsx'
 import LinkedSpecialistsPage from './pages/LinkedSpecialistsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import MySchedulePage from './pages/MySchedulePage.jsx'
 import ParentHome from './pages/ParentHome.jsx'
 import SchedulePage from './pages/SchedulePage.jsx'
 import SpecialistHome from './pages/SpecialistHome.jsx'
@@ -57,6 +58,7 @@ export default function App() {
         }
       >
         <Route path="/child" element={<ChildHome />} />
+        <Route path="/child/schedule" element={<MySchedulePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

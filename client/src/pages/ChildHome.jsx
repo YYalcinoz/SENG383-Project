@@ -3,7 +3,7 @@ import { useAuth } from '../auth/useAuth.js'
 
 const MODULES = [
   { label: 'My tasks' },
-  { label: 'My schedule' },
+  { label: 'My schedule', path: '/child/schedule' },
 ]
 
 export default function ChildHome() {

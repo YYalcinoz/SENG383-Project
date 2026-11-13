@@ -11,8 +11,7 @@
   text-align: left;
 }
 
-.schedule-page h3,
-.schedule-page h4 {
+.schedule-page h3 {
   margin: 0;
   color: var(--text-h);
 }
@@ -24,53 +23,6 @@
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
-}
-
-.week-days {
-  display: grid;
-  gap: 8px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.week-day {
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.no-events {
-  margin: 4px 0 0;
-  font-size: 0.9em;
-}
-
-.event-list {
-  display: grid;
-  gap: 4px;
-  padding: 0;
-  margin: 6px 0 0;
-  list-style: none;
-}
-
-.event-list li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-
-.event-time {
-  min-width: 96px;
-  font-variant-numeric: tabular-nums;
-}
-
-.event-title {
-  color: var(--text-h);
-  font-weight: 500;
-}
-
-.event-type {
-  font-size: 0.9em;
 }
 
 .event-form {
