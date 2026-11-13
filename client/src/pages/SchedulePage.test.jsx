@@ -350,6 +350,17 @@ test('a 403 from the backend is shown and no form is offered (FR-M3-05)', async 
   expect(screen.getByRole('link', { name: 'Back to home' }).getAttribute('href')).toBe('/parent')
 })
 
+test.each([
+  ['weekStart is missing', { events: [] }],
+  ['weekStart is not a date', { weekStart: 'next monday', events: [] }],
+  ['events is not a list', { weekStart: '2026-11-16', events: 'none' }],
+])('shows an error instead of crashing when %s in the response', async (_name, body) => {
+  await renderPage(PAGE, { routes: { [`GET ${API}`]: () => jsonResponse(body) } })
+
+  expect((await screen.findByRole('alert')).textContent).toBe('Unexpected response from the server')
+  expect(screen.queryByLabelText('Title')).toBeNull()
+})
+
 test.each(['abc', '0', '..%2F..%2Fauth'])('the child id "%s" sends no schedule request', async (id) => {
   const fetchSpy = await renderPage(`/parent/children/${id}/schedule`)
 
