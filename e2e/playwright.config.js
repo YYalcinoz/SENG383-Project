@@ -16,7 +16,12 @@ fs.mkdirSync(DATA_DIR, { recursive: true })
 
 export default defineConfig({
   testDir: './tests',
-  // Testler aynı veritabanını paylaşıyor; sırayla çalışsınlar ki biri diğerinin verisini bozmasın
+  // All tests share one seeded database that is NOT reset between tests, so they run one
+  // at a time. Rule for every new test: a test that changes data must either undo its change
+  // (e.g. link a specialist, then unlink them) or use data that no other test relies on.
+  // The login tests rely on Ayşe, Zeynep and Mehmet being linked to Zeynep only; Fatma, Ali and Elif
+  // are free for tests that change data. There is deliberately no reset endpoint: a test-only
+  // route that wipes the database would be dangerous if it were ever enabled in production.
   workers: 1,
   fullyParallel: false,
   // CI'da yanlışlıkla bırakılan test.only bütün testleri atlatmasın

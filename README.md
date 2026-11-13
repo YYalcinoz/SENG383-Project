@@ -95,6 +95,8 @@ npm test
 
 They use their own database file (`e2e/.data/e2e.db`) and ports (3100 and 5180), so they never touch `server/database.db` and can run while the app is running on 3000 and 5173. After a failure, `npm run report` opens a report with a trace of each step.
 
+The tests share one seeded database that is not reset between tests. A test that changes data must either undo its change or use data that no other test relies on; see the note in `e2e/playwright.config.js` for which seed accounts are free to change.
+
 In GitHub Actions, every pull request runs the server and client tests with coverage, the client linter, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
 
 ## Troubleshooting
