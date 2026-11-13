@@ -1,0 +1,123 @@
+.schedule-page {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  padding: 0 16px 32px;
+}
+
+.schedule-page section {
+  width: 100%;
+  max-width: 640px;
+  text-align: left;
+}
+
+.schedule-page h3,
+.schedule-page h4 {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.week-days {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.week-day {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.no-events {
+  margin: 4px 0 0;
+  font-size: 0.9em;
+}
+
+.event-list {
+  display: grid;
+  gap: 4px;
+  padding: 0;
+  margin: 6px 0 0;
+  list-style: none;
+}
+
+.event-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.event-time {
+  min-width: 96px;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-title {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.event-type {
+  font-size: 0.9em;
+}
+
+.event-form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 4px;
+}
+
+.form-field label {
+  color: var(--text-h);
+}
+
+.form-field input,
+.form-field select {
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.schedule-page button {
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.schedule-page button:disabled {
+  cursor: not-allowed;
+}
+
+.notice:empty {
+  display: none;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--error);
+}
