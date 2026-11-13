@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-10
+**Last updated:** 2026-11-13
 
 ---
 
@@ -234,7 +234,7 @@ erDiagram
 | POST | `/api/children/:childId/tasks` | Assign a task with title, description, development area and due date (parent or linked specialist) | M4 |
 | PATCH | `/api/children/:childId/tasks/:taskId/done` | Mark a task as done (child only) | M4 |
 | GET | `/api/children/:childId/statistics/weekly?weekStart=YYYY-MM-DD` | Completion rate for the week, in total and by development area; defaults to the current week (parent and linked specialist) | M7 |
-| GET | `/api/children/:childId/schedule` | List the child's calendar events (child, parent, linked specialists) | M3 |
+| GET | `/api/children/:childId/schedule?weekStart=YYYY-MM-DD` | List the child's calendar events for one week; defaults to the current week (child, parent, linked specialists) | M3 |
 | POST | `/api/children/:childId/schedule` | Add a calendar event (parent or linked specialist) | M3 |
 | GET | `/api/children/:childId/entries` | List specialist entries for the child (parent and linked specialist only) | M5 |
 | POST | `/api/children/:childId/entries` | Add a specialist entry (linked specialist only) | M5 |
@@ -341,6 +341,33 @@ Request: `{ "weekStart": "YYYY-MM-DD", "rating": "helpful" }` (`rating` is `help
 | 400 (no records in the week, FR-M8-09) | `{ "error": "There is no summary for this week" }` |
 | 401 | Same as for every protected endpoint (see above) |
 | 403 | The user is a child, a parent of another child, or a specialist who is not linked to the child |
+
+### Calendar events API format
+
+All endpoints need `Authorization: Bearer <token>`. Access errors (401, 403, invalid child id) follow the table in Section 2. `eventDate` is a plain date (`YYYY-MM-DD`), `startTime` and `endTime` are `HH:MM` (00:00–23:59), `endTime` is `null` when it was not given, `createdAt` is ISO 8601 UTC, and `eventType` is one of `school`, `support`, `health`, `sports`, `other`. An event looks like this:
+
+`{ "id": 4, "title": "Swimming class", "eventDate": "2026-11-18", "startTime": "16:00", "endTime": "17:00", "eventType": "sports", "creatorName": "Ayşe Yılmaz", "createdAt": "2026-11-13T17:30:00Z" }`
+
+**GET `/api/children/:childId/schedule?weekStart=YYYY-MM-DD`** (the child's parent, linked specialists and the child)
+
+`weekStart` is optional and can be any day of the week; the server turns it into that week's Monday with `getWeekRange`. Without it, the current week is used, based on the server's local date: the application runs on the team's computers in Turkey, and with UTC, Monday 00:00–03:00 would still show the previous week.
+
+| Status | Response |
+|---|---|
+| 200 | `{ "weekStart": "2026-11-16", "weekEnd": "2026-11-22", "events": [ ... ] }`, ordered by date and start time; `"events": []` for a week without events |
+| 400 | `{ "error": "weekStart must be a date in YYYY-MM-DD format" }` |
+
+The creator's email address and id are not returned.
+
+**POST `/api/children/:childId/schedule`** (the child's parent or a linked specialist; a child gets 403)
+
+Request: `{ "title": "...", "eventDate": "2026-11-18", "startTime": "16:00", "endTime": "17:00", "eventType": "sports" }`. The title is trimmed and at most 200 characters, the same limit as task titles. `endTime` is optional and, when given, must be after `startTime`. The creator is taken from the token and the child from the URL; any other fields in the body are ignored.
+
+| Status | Response |
+|---|---|
+| 201 | `{ "event": { ... } }` |
+| 400 (missing field, FR-M3-02) | `{ "error": "Title is required" }`, `{ "error": "Date is required" }` or `{ "error": "Start time is required" }` |
+| 400 (invalid field) | `{ "error": "Title must be at most 200 characters" }`, `{ "error": "Date must be a valid date in YYYY-MM-DD format" }`, `{ "error": "Start time must be a time in HH:MM format" }`, `{ "error": "End time must be a time in HH:MM format" }`, `{ "error": "End time must be after the start time" }` or `{ "error": "Event type must be one of: school, support, health, sports, other" }` |
 
 ---
 
@@ -462,3 +489,4 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-08 | Architecture overview, Flow 1 and Flow 2 sequence diagrams and user interface wireframes added | Kerem Alp Ustaoğlu |
 | 2026-11-09 | Children and specialist linking API format added | Yağız Yalçınöz |
 | 2026-11-10 | Child list on the parent and specialist home pages | Yağız Yalçınöz |
+| 2026-11-13 | Calendar events API format added | Zeynep Dila Tetik |
