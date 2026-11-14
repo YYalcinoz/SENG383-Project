@@ -47,7 +47,7 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 | PMP-6 | Yağız Yalçınöz | 0 | Sprint 8 |
 | M1 | Yağız Yalçınöz | 19 | Sprint 2 (walking skeleton), Sprints 3–4 |
 | M2 | Yağız Yalçınöz | 4 | Sprints 3–5 |
-| M3 | Zeynep Dila Tetik | 4 | Sprints 3–5 |
+| M3 | Zeynep Dila Tetik | 5 | Sprints 3–5 |
 | M4 | Kerem Alp Ustaoğlu | 3 | Sprints 4–5 |
 | M5 | Zeynep Dila Tetik | 0 | Sprints 5–6 |
 | M6 | Yağız Yalçınöz | 0 | Sprints 5–6 |
