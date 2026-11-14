@@ -16,6 +16,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/children', childrenRoutes);
 app.use('/api/children/:childId/specialists', specialistRoutes);
 app.use('/api/children/:childId/schedule', scheduleRoutes);
+app.use('/api/children/:childId/tasks', taskRoutes);
 
 // Tüm hatalar { error } biçiminde dönsün; 500'lerde iç detay sızmasın
 app.use((err, req, res, next) => {
@@ -23,7 +24,5 @@ app.use((err, req, res, next) => {
   if (status >= 500) console.error(err);
   res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
 });
-
-app.use('/api/children/:childId/tasks', taskRoutes);
 
 module.exports = app;
