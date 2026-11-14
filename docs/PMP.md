@@ -45,10 +45,10 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 | PMP-4 | Yağız Yalçınöz | 0 | Sprint 5 |
 | PMP-5 | Yağız Yalçınöz | 0 | Sprint 7 |
 | PMP-6 | Yağız Yalçınöz | 0 | Sprint 8 |
-| M1 | Yağız Yalçınöz | 16 | Sprint 2 (walking skeleton), Sprints 3–4 |
-| M2 | Yağız Yalçınöz | 1 | Sprints 3–5 |
-| M3 | Zeynep Dila Tetik | 1 | Sprints 3–5 |
-| M4 | Kerem Alp Ustaoğlu | 0 | Sprints 4–5 |
+| M1 | Yağız Yalçınöz | 19 | Sprint 2 (walking skeleton), Sprints 3–4 |
+| M2 | Yağız Yalçınöz | 4 | Sprints 3–5 |
+| M3 | Zeynep Dila Tetik | 5 | Sprints 3–5 |
+| M4 | Kerem Alp Ustaoğlu | 3 | Sprints 4–5 |
 | M5 | Zeynep Dila Tetik | 0 | Sprints 5–6 |
 | M6 | Yağız Yalçınöz | 0 | Sprints 5–6 |
 | M7 | Kerem Alp Ustaoğlu | 0 | Sprints 6–7 |
@@ -56,7 +56,7 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 | SRS | Kerem Alp Ustaoğlu | 6 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
 | DESIGN | Kerem Alp Ustaoğlu | 8 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
 
-Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner is responsible for the module and creates its tasks at the start of the sprints in which it is planned; individual tasks may be assigned to other team members. The task counts above show the state at the end of Sprint 3 and will grow accordingly.
+Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner is responsible for the module and creates its tasks at the start of the sprints in which it is planned; individual tasks may be assigned to other team members. The task counts above show the state at the end of Sprint 4 and will grow accordingly.
 
 ### Sprint Plan
 
@@ -80,15 +80,21 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 **Jira board screenshot:**  
 
+![Jira board at the end of Sprint 4](img/sprint4-board.png)
+
+*Board at the end of Sprint 4 (15 Nov 2026): 10 of 13 tasks done; the two M4 pages and this PMP section were still open when the screenshot was taken.*
+
 | Epic | Planned for this point | Status (Done / In progress / Not started) |
 |---|---|---|
-| PMP-2 | Work packages and sprint plan | |
-| SRS | First version | |
-| DESIGN | First version | |
-| M1 | Login and roles complete | |
-| M2 | Shared access middleware; module in progress | |
-| M3 | In progress | |
-| M4 | In progress | |
+| PMP-2 | Work packages and sprint plan | Done |
+| SRS | First version | Done |
+| DESIGN | First version | Done |
+| M1 | Login and roles complete | Done |
+| M2 | Shared access middleware; module in progress | In progress: the middleware and every Must requirement (FR-M2-01 … FR-M2-08) are done; rate limiting and the Flow 1 end-to-end test are planned for Sprint 5 |
+| M3 | In progress | Done for v0.1: the calendar events API, the weekly schedule page and the child's schedule page cover all Must requirements; the monthly view (FR-M3-06, Could) is not started |
+| M4 | In progress | In progress: the tasks API is done; the tasks page and the child's "My tasks" page move to Sprint 5 |
+
+**Quality at this point:** 325 server tests, 212 client tests and 5 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 91.9% on the client, above the 60% that NFR-05 requires for v1.0.
 
 **Changes to the plan (if any):**
 
@@ -97,6 +103,13 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 - **Access middleware:** `requireChildAccess` moved from M2's planned sprints to Sprint 3, because M3 and M4 depend on it.
 - **Task ownership:** Module owners stay responsible for their modules, but individual tasks can be assigned to other team members.
 - **Unplanned tasks from code review:** Reviews in Sprint 3 found two problems that were fixed in their own tasks: the server kept running when the database could not be opened (HLX-54), and the seed script printed a long error on Windows when the database file was in use (HLX-52). Both are tracked under M1.
+- **Mid-term evaluation:** Our team is in Section 2, so the mid-term demo is in the Week 9 class. We keep v0.1 at the end of Week 8 (Sprint 5) as planned and use Week 9 only as a buffer.
+- **Midterm exams in Sprint 5:** Sprint 5 falls in the midterm exam week. Its scope is limited to the Must requirements of M3 and M4 and the v0.1 release; Could requirements (monthly view, overdue label) are left for later sprints.
+- **End-to-end test and coverage moved earlier:** The first end-to-end test in CI was planned for v0.1 (Sprint 5). It was added in Sprint 4 (HLX-63) together with coverage reports and a 60% branch coverage threshold in CI (HLX-64).
+- **M3 ahead of plan, M4 pages in Sprint 5:** All three M3 tasks were finished in Sprint 4. The two M4 pages depend on the tasks API, which was merged at the end of Sprint 4, so they move to Sprint 5 as planned for M4.
+- **Tasks table:** The `tasks` table, planned as a separate database task, was added together with the tasks API in HLX-71, since the API and its tests depend on it.
+- **Jira plan and automation:** The Jira Standard trial ended, and the site was moved to the Free plan before the deadline. The "pull request merged → Done" automation still works on the Free plan.
+- **Security tooling:** We enabled CodeQL code scanning and Dependabot alerts. CodeQL reported missing rate limiting on the API, which we already knew about; adding it is planned for Sprint 5. Dependabot found two issues in development-only dependencies of Jest that never run on the server; we accepted them with a written reason, since the only fix would downgrade Jest.
 
 ---
 
