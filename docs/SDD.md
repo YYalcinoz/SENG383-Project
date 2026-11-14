@@ -304,6 +304,38 @@ Request: `{ "email": "...", "specialistType": "teacher" }`. `specialistType` is 
 | 400 | `{ "error": "Invalid specialist id" }` |
 | 404 | `{ "error": "This specialist is not linked to the child" }` |
 
+### Tasks API format
+
+All endpoints need `Authorization: Bearer <token>`. Access errors (401, 403, invalid child id) follow the table in Section 2. `dueDate` is a plain date (`YYYY-MM-DD`), `createdAt` and `doneAt` are ISO 8601 UTC, `status` is `todo` or `done`, and `developmentArea` is one of `motor`, `language`, `cognitive`, `social-emotional`, `self-care`. A task looks like this:
+
+`{ "id": 7, "title": "Read 10 pages", "description": "Any book, out loud", "developmentArea": "language", "dueDate": "2026-11-20", "status": "todo", "assignerName": "Mehmet Demir", "createdAt": "2026-11-13T06:20:52Z", "doneAt": null }`
+
+**GET `/api/children/:childId/tasks`** (the child's parent, linked specialists and the child)
+
+| Status | Response |
+|---|---|
+| 200 | `{ "tasks": [ ... ] }` with all of the child's tasks, ordered by `dueDate` and then `id`; `{ "tasks": [] }` when there are none |
+
+The assigner's email address and id are not returned.
+
+**POST `/api/children/:childId/tasks`** (the child's parent or a linked specialist; a child gets 403)
+
+Request: `{ "title": "...", "description": "...", "developmentArea": "language", "dueDate": "2026-11-20" }`. The title is trimmed and at most 200 characters, the description is optional and at most 2000 characters. The assigner is taken from the token; `status`, `doneAt` and the child id in the body are ignored, and every new task starts as `todo`.
+
+| Status | Response |
+|---|---|
+| 201 | `{ "task": { ... } }` |
+| 400 | `{ "error": "Title is required" }`, `{ "error": "Title must be at most 200 characters" }`, `{ "error": "Development area must be one of: ..." }`, `{ "error": "Due date must be a valid date in YYYY-MM-DD format" }` or `{ "error": "Description must be text of at most 2000 characters" }` |
+
+**PATCH `/api/children/:childId/tasks/:taskId/done`** (the child only)
+
+| Status | Response |
+|---|---|
+| 200 | `{ "task": { ... } }` with `status` `done` and `doneAt` set. Marking a task done again returns 200 and keeps the first `doneAt`. |
+| 400 | `{ "error": "Invalid task id" }` |
+| 403 | A parent or a specialist, or a child asking about another child |
+| 404 | `{ "error": "Task not found" }`, the same for a task that does not exist and a task of another child |
+
 ### AI summary API format
 
 **GET `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD`**
@@ -489,4 +521,5 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-08 | Architecture overview, Flow 1 and Flow 2 sequence diagrams and user interface wireframes added | Kerem Alp Ustaoğlu |
 | 2026-11-09 | Children and specialist linking API format added | Yağız Yalçınöz |
 | 2026-11-10 | Child list on the parent and specialist home pages | Yağız Yalçınöz |
+| 2026-11-13 | Tasks API format added | Kerem Alp Ustaoğlu |
 | 2026-11-13 | Calendar events API format added | Zeynep Dila Tetik |
