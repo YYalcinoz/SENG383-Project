@@ -186,22 +186,26 @@ describe('GET /api/children/:childId/tasks', () => {
   let zeynepTaskIds;
 
   beforeAll(async () => {
-    // Clean slate for the list tests: Zeynep has two tasks assigned by different
-    // people, Deniz has one, Ali has none
+    // Clean slate for the list tests: Zeynep has four tasks assigned by different people,
+    // Deniz has one, Ali has none. The tasks are inserted in an order that matches
+    // neither the due dates nor the reverse of them, and two share a due date, so the
+    // test only passes with ORDER BY due_date, id (not by id, nor by id descending).
     await run('DELETE FROM tasks');
     zeynepTaskIds = [
       await insertTask('Zeynep', 'Ayse', { title: 'Later task', due_date: '2026-11-25' }),
       await insertTask('Zeynep', 'Mehmet', { title: 'Earlier task', due_date: '2026-11-12' }),
+      await insertTask('Zeynep', 'Ayse', { title: 'Middle task', due_date: '2026-11-18' }),
+      await insertTask('Zeynep', 'Mehmet', { title: 'Same day task', due_date: '2026-11-12' }),
     ];
     await insertTask('Deniz', 'Ayse', { title: 'Deniz task' });
   });
 
-  test('the parent sees all tasks of the child, ordered by due date, with the assigner', async () => {
+  test('the parent sees all tasks of the child, ordered by due date and then id, with the assigner', async () => {
     const res = await request(app).get(tasksUrl('Zeynep')).set(as('Ayse'));
 
     expect(res.status).toBe(200);
-    expect(res.body.tasks.map((t) => t.title)).toEqual(['Earlier task', 'Later task']);
-    expect(res.body.tasks.map((t) => t.assignerName)).toEqual(['Mehmet', 'Ayse']);
+    expect(res.body.tasks.map((t) => t.title)).toEqual(['Earlier task', 'Same day task', 'Middle task', 'Later task']);
+    expect(res.body.tasks.map((t) => t.assignerName)).toEqual(['Mehmet', 'Mehmet', 'Ayse', 'Ayse']);
     expect(res.body.tasks[0]).toMatchObject({
       id: zeynepTaskIds[1],
       description: '',
@@ -215,13 +219,13 @@ describe('GET /api/children/:childId/tasks', () => {
   test('a linked specialist sees all tasks of the child, also those the parent assigned', async () => {
     const res = await request(app).get(tasksUrl('Zeynep')).set(as('Mehmet'));
     expect(res.status).toBe(200);
-    expect(res.body.tasks).toHaveLength(2);
+    expect(res.body.tasks).toHaveLength(4);
   });
 
   test('the child sees their own tasks', async () => {
     const res = await request(app).get(tasksUrl('Zeynep')).set(as('Zeynep'));
     expect(res.status).toBe(200);
-    expect(res.body.tasks).toHaveLength(2);
+    expect(res.body.tasks).toHaveLength(4);
   });
 
   test("does not include another child's tasks", async () => {
