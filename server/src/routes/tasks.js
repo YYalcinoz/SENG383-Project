@@ -2,6 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db/helpers');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { requireChildAccess } = require('../middleware/childAccess');
+const { isValidDate } = require('../utils/week');
 
 // Must match the CHECK constraint on tasks.development_area
 const DEVELOPMENT_AREAS = ['motor', 'language', 'cognitive', 'social-emotional', 'self-care'];
@@ -21,13 +22,6 @@ const SELECT_SQL = `SELECT t.id, t.title, t.description,
     strftime('%Y-%m-%dT%H:%M:%SZ', t.done_at) AS doneAt
   FROM tasks t
   JOIN users u ON u.id = t.assigner_id`;
-
-// A real calendar date: 2026-02-30 has the right shape but does not exist
-function isValidDate(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
 
 // Returns the first problem as a message, or null when the body is valid (FR-M4-02)
 function validateNewTask(body) {
