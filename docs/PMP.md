@@ -78,11 +78,15 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 ## PMP-3. Progress Review: Mid-term (v0.1)
 
-**Jira board screenshot:**  
+**Jira board screenshots:**  
+
+![Jira board at the end of Sprint 3](img/sprint3-board.png)
+
+*Board at the end of Sprint 3 (8 Nov 2026).*
 
 ![Jira board at the end of Sprint 4](img/sprint4-board.png)
 
-*Board at the end of Sprint 4 (15 Nov 2026): 10 of 13 tasks done; the two M4 pages and this PMP section were still open when the screenshot was taken.*
+*Board at the end of Sprint 4 (15 Nov 2026): 12 of 13 tasks done; only this PMP section was still open when the screenshot was taken.*
 
 | Epic | Planned for this point | Status (Done / In progress / Not started) |
 |---|---|---|
@@ -92,9 +96,9 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 | M1 | Login and roles complete | Done |
 | M2 | Shared access middleware; module in progress | In progress: the middleware and every Must requirement (FR-M2-01 … FR-M2-08) are done; rate limiting and the Flow 1 end-to-end test are planned for Sprint 5 |
 | M3 | In progress | Done for v0.1: the calendar events API, the weekly schedule page and the child's schedule page cover all Must requirements; the monthly view (FR-M3-06, Could) is not started |
-| M4 | In progress | In progress: the tasks API is done; the tasks page and the child's "My tasks" page move to Sprint 5 |
+| M4 | In progress | Done for v0.1: the tasks API, the tasks page and the child's "My tasks" page cover all Must requirements (FR-M4-01 … FR-M4-08); the overdue label (FR-M4-09, Could) is not started |
 
-**Quality at this point:** 325 server tests, 212 client tests and 5 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 91.9% on the client, above the 60% that NFR-05 requires for v1.0.
+**Quality at this point:** 325 server tests, 272 client tests and 5 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 91.5% on the client, above the 60% that NFR-05 requires for v1.0.
 
 **Changes to the plan (if any):**
 
@@ -104,9 +108,9 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 - **Task ownership:** Module owners stay responsible for their modules, but individual tasks can be assigned to other team members.
 - **Unplanned tasks from code review:** Reviews in Sprint 3 found two problems that were fixed in their own tasks: the server kept running when the database could not be opened (HLX-54), and the seed script printed a long error on Windows when the database file was in use (HLX-52). Both are tracked under M1.
 - **Mid-term evaluation:** Our team is in Section 2, so the mid-term demo is in the Week 9 class. We keep v0.1 at the end of Week 8 (Sprint 5) as planned and use Week 9 only as a buffer.
-- **Midterm exams in Sprint 5:** Sprint 5 falls in the midterm exam week. Its scope is limited to the Must requirements of M3 and M4 and the v0.1 release; Could requirements (monthly view, overdue label) are left for later sprints.
+- **Midterm exams in Sprint 5:** Sprint 5 falls in the midterm exam week. Since M3 and M4 were finished in Sprint 4, its scope is limited to the remaining M2 work (rate limiting and the Flow 1 end-to-end test) and the v0.1 release; Could requirements (monthly view, overdue label) are left for later sprints.
 - **End-to-end test and coverage moved earlier:** The first end-to-end test in CI was planned for v0.1 (Sprint 5). It was added in Sprint 4 (HLX-63) together with coverage reports and a 60% branch coverage threshold in CI (HLX-64).
-- **M3 ahead of plan, M4 pages in Sprint 5:** All three M3 tasks were finished in Sprint 4. The two M4 pages depend on the tasks API, which was merged at the end of Sprint 4, so they move to Sprint 5 as planned for M4.
+- **M3 and M4 ahead of plan:** M3 and M4 were planned to finish in Sprint 5, but all their v0.1 tasks were finished in Sprint 4: the three M3 tasks of that sprint, and the tasks API with both M4 pages.
 - **Tasks table:** The `tasks` table, planned as a separate database task, was added together with the tasks API in HLX-71, since the API and its tests depend on it.
 - **Jira plan and automation:** The Jira Standard trial ended, and the site was moved to the Free plan before the deadline. The "pull request merged → Done" automation still works on the Free plan.
 - **Security tooling:** We enabled CodeQL code scanning and Dependabot alerts. CodeQL reported missing rate limiting on the API, which we already knew about; adding it is planned for Sprint 5. Dependabot found two issues in development-only dependencies of Jest that never run on the server; we accepted them with a written reason, since the only fix would downgrade Jest.
