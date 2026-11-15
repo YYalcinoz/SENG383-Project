@@ -2,7 +2,7 @@ import ModuleList from '../components/ModuleList.jsx'
 import { useAuth } from '../auth/useAuth.js'
 
 const MODULES = [
-  { label: 'My tasks' },
+  { label: 'My tasks', path: '/child/tasks' },
   { label: 'My schedule', path: '/child/schedule' },
 ]
 
