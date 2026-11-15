@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { useEffect } from 'react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 import App from '../App.jsx'
 import { setToken } from '../api.js'
@@ -155,13 +156,85 @@ test('shows task text as plain text and never as HTML', async () => {
   expect(taskList().textContent).toContain('<b>Mallory</b>')
 })
 
-test('the Back to home link goes to the home page of the role', async () => {
+test.each([
+  ['parent', PAGE, '/parent'],
+  ['specialist', '/specialist/children/2/tasks', '/specialist'],
+])('the Back to home link of a %s goes to their own home page', async (role, path, home) => {
   const user = userEvent.setup()
-  await renderPage()
+  await renderPage(path, { role })
 
-  await user.click(screen.getByRole('link', { name: 'Back to home' }))
+  // Adrese bakmak yetmez: yanlış bir bağlantıya tıklayan kullanıcıyı ProtectedRoute zaten kendi
+  // ana sayfasına yönlendirir. Bu yüzden bağlantının kendisi de kontrol edilir.
+  const link = screen.getByRole('link', { name: 'Back to home' })
+  expect(link.getAttribute('href')).toBe(home)
 
-  expect(currentAddress()).toBe('/parent')
+  await user.click(link)
+
+  expect(currentAddress()).toBe(home)
+})
+
+// --- Switching to another child ---
+
+const ALI = { id: 5, name: 'Ali Şahin' }
+const ALI_TASK = task(7, 'Ali task', '2026-11-30', 'todo', 'cognitive', 'Fatma Şahin')
+const ALI_API = '/api/children/5/tasks'
+
+// Testin sayfayı başka bir çocuğa yönlendirebilmesi için router'ın navigate fonksiyonu
+function renderWithNavigation(api) {
+  setToken('good')
+  const router = {}
+  function NavigateProbe() {
+    const navigate = useNavigate()
+    useEffect(() => {
+      router.navigate = navigate
+    }, [navigate])
+    return null
+  }
+  const fetchSpy = mockApi({ children: [ZEYNEP, ALI], ...api })
+  render(
+    <MemoryRouter initialEntries={[PAGE]}>
+      <AuthProvider>
+        <NavigateProbe />
+        <App />
+      </AuthProvider>
+    </MemoryRouter>,
+  )
+  return { router, fetchSpy }
+}
+
+test("switching to another child never shows the previous child's tasks, not even while the new ones load", async () => {
+  const second = gate(() => jsonResponse({ tasks: [ALI_TASK] }))
+  const { router } = renderWithNavigation({ routes: { [`GET ${ALI_API}`]: second.handler } })
+  await screen.findByRole('list', { name: 'Tasks' })
+  expect(titles()).toContain('Read 10 pages')
+
+  act(() => router.navigate('/parent/children/5/tasks'))
+
+  expect(await screen.findByRole('heading', { name: 'Ali Şahin' })).toBeTruthy()
+  expect(screen.getByText('Loading…')).toBeTruthy()
+  expect(screen.queryByText('Read 10 pages')).toBeNull()
+  expect(screen.queryByRole('list', { name: 'Tasks' })).toBeNull()
+
+  await act(async () => second.release())
+  expect(await screen.findByText('Ali task')).toBeTruthy()
+  expect(titles()).toEqual(['Ali task'])
+})
+
+test('a late answer for the previous child is ignored and does not replace the new list', async () => {
+  const first = gate(() => jsonResponse({ tasks: [READ, DRESS, BALANCE] }))
+  const { router } = renderWithNavigation({
+    routes: { [`GET ${API}`]: first.handler, [`GET ${ALI_API}`]: () => jsonResponse({ tasks: [ALI_TASK] }) },
+  })
+  await screen.findByRole('heading', { name: 'Zeynep Yılmaz' })
+
+  act(() => router.navigate('/parent/children/5/tasks'))
+  expect(await screen.findByText('Ali task')).toBeTruthy()
+
+  // Zeynep'in görevleri geç gelir; Ali'nin listesi olduğu gibi kalmalı
+  await act(async () => first.release())
+
+  expect(titles()).toEqual(['Ali task'])
+  expect(screen.queryByText('Read 10 pages')).toBeNull()
 })
 
 // --- Links from the home pages ---
