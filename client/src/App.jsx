@@ -11,6 +11,7 @@ import ParentHome from './pages/ParentHome.jsx'
 import SchedulePage from './pages/SchedulePage.jsx'
 import SpecialistHome from './pages/SpecialistHome.jsx'
 import TasksPage from './pages/TasksPage.jsx'
+import MyTasksPage from './pages/MyTasksPage.jsx'
 
 // Yeni sayfa eklemek için: sayfa bileşenini src/pages altında yaz ve o rolün <Route> grubuna ekle,
 // ör. parent için <Route path="/parent/children/:childId/tasks" element={<TasksPage />} />.
@@ -62,6 +63,7 @@ export default function App() {
       >
         <Route path="/child" element={<ChildHome />} />
         <Route path="/child/schedule" element={<MySchedulePage />} />
+        <Route path="/child/tasks" element={<MyTasksPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
