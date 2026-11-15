@@ -82,7 +82,7 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 ![Jira board at the end of Sprint 3](img/sprint3-board.png)
 
-*Board at the end of Sprint 3 (8 Nov 2026).*
+*Board at the end of Sprint 3 (8 Nov 2026): all 19 tasks done.*
 
 ![Jira board at the end of Sprint 4](img/sprint4-board.png)
 
