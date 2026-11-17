@@ -2,6 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db/helpers');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { requireChildAccess } = require('../middleware/childAccess');
+const { linkSpecialistLimiter } = require('../middleware/rateLimit');
 
 // Must match the CHECK constraint on specialist_links.specialist_type
 const SPECIALIST_TYPES = ['teacher', 'psychologist', 'doctor', 'special education teacher', 'coach'];
@@ -24,8 +25,10 @@ router.get('/', authenticate, requireRole('parent'), requireChildAccess, async (
   res.json({ specialists });
 });
 
-// FR-M2-01, FR-M2-02, FR-M2-05: only the child's parent links a specialist
-router.post('/', authenticate, requireRole('parent'), requireChildAccess, async (req, res) => {
+// FR-M2-01, FR-M2-02, FR-M2-05: only the child's parent links a specialist.
+// The limiter runs before requireChildAccess, so requests for other children's ids
+// also count as failed attempts.
+router.post('/', authenticate, requireRole('parent'), linkSpecialistLimiter, requireChildAccess, async (req, res) => {
   const { email, specialistType } = req.body || {};
 
   if (typeof email !== 'string' || !email.trim()) {

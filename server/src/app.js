@@ -4,13 +4,18 @@ const childrenRoutes = require('./routes/children');
 const specialistRoutes = require('./routes/specialists');
 const taskRoutes = require('./routes/tasks');
 const scheduleRoutes = require('./routes/schedule');
+const { apiLimiter } = require('./middleware/rateLimit');
 
 const app = express();
-app.use(express.json());
 
+// Not rate limited: the E2E setup and other tools poll it to see if the server is up
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+
+// Before express.json(), so a client over the limit is rejected before its body is read
+app.use('/api', apiLimiter);
+app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/children', childrenRoutes);
