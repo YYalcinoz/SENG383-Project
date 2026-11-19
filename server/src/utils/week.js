@@ -36,4 +36,4 @@ function getWeekRange(dateString = today()) {
   return { start, end: addDays(start, 6) };
 }
 
-module.exports = { isValidDate, getWeekRange, today };
+module.exports = { isValidDate, addDays, getWeekRange, today };

@@ -1,4 +1,4 @@
-const { getWeekRange, isValidDate, today } = require('../src/utils/week');
+const { addDays, getWeekRange, isValidDate, today } = require('../src/utils/week');
 
 describe('getWeekRange', () => {
   test.each([
@@ -42,6 +42,18 @@ describe('isValidDate', () => {
     ['2026-11-13'],
   ])('rejects %j', (value) => {
     expect(isValidDate(value)).toBe(false);
+  });
+});
+
+describe('addDays', () => {
+  test.each([
+    ['2026-11-16', 7, '2026-11-23'],
+    ['2026-11-16', -7, '2026-11-09'],
+    ['2026-12-28', 6, '2027-01-03'],
+    ['2026-03-01', -1, '2026-02-28'],
+    ['2028-02-28', 1, '2028-02-29'],
+  ])('%s + %i days is %s', (date, days, result) => {
+    expect(addDays(date, days)).toBe(result);
   });
 });
 
