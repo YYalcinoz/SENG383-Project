@@ -1,6 +1,9 @@
-const { rateLimit } = require('express-rate-limit');
+const { rateLimit, MemoryStore } = require('express-rate-limit');
 
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
+
+// Each limiter has its own store, kept here so resetRateLimits() can clear them
+const stores = [];
 
 // All limiters count requests in a 15-minute window and answer 429 in the same
 // { error } format as the rest of the API. The counts are kept in memory, so they
@@ -12,7 +15,10 @@ const FIFTEEN_MINUTES = 15 * 60 * 1000;
 // header and so never reach a limit. In development every request comes through
 // the Vite proxy from localhost, so all users of one machine share the same limit.
 function createLimiter({ limit, message, ...options }) {
+  const store = new MemoryStore();
+  stores.push(store);
   return rateLimit({
+    store,
     windowMs: FIFTEEN_MINUTES,
     limit,
     // RateLimit and RateLimit-Policy headers tell the client its limit and when
@@ -52,4 +58,11 @@ const linkSpecialistLimiter = createLimiter({
   message: 'Too many failed attempts to link a specialist, please try again in 15 minutes',
 });
 
-module.exports = { apiLimiter, loginLimiter, linkSpecialistLimiter };
+// For tests only; the server never calls it. A test file shares one app, so its
+// failed attempts add up across tests. A test file that does not test the limits
+// calls this in beforeEach, so a new test can never fail with an unexpected 429.
+async function resetRateLimits() {
+  await Promise.all(stores.map((store) => store.resetAll()));
+}
+
+module.exports = { apiLimiter, loginLimiter, linkSpecialistLimiter, resetRateLimits };

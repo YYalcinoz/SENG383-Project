@@ -6,12 +6,14 @@ const app = require('../src/app');
 const db = require('../src/db/database');
 const { jwtSecret } = require('../src/config');
 const { run } = require('../src/db/helpers');
+const { resetRateLimits } = require('../src/middleware/rateLimit');
 
 // The limits are counted in memory. Jest loads the app again for every test file, so
 // the counts here never reach other test files. Inside this file they are shared: the
 // login limit is per IP and every request comes from the same IP, so the login tests
-// must run in this order. The specialist link limit is per parent, so those tests
-// use different parents.
+// must run in this order (unlike other test files, this one does not reset the counts
+// before each test). The specialist link limit is per parent, so those tests use
+// different parents.
 
 const PASSWORD = 'correct-password';
 const users = {};
@@ -75,6 +77,14 @@ describe('login limit (10 failed attempts per IP in 15 minutes)', () => {
     // The client can read the limit and the 15-minute window from the standard headers
     expect(res.headers['ratelimit-policy']).toMatch(/q=10;.*w=900/);
     expect(res.headers['x-ratelimit-limit']).toBeUndefined();
+  });
+
+  test('resetRateLimits() clears the counts, so tests can start from zero', async () => {
+    expect((await login({ email: users.parentA.email, password: PASSWORD })).status).toBe(429);
+
+    await resetRateLimits();
+
+    expect((await login({ email: users.parentA.email, password: PASSWORD })).status).toBe(200);
   });
 
   test('the login limit does not block the rest of the API', async () => {
