@@ -110,7 +110,7 @@ In GitHub Actions, every pull request runs the server and client tests with cove
 
 ## Sample data
 
-All data is synthetic. `npm run seed` creates the database file `server/database.db` with two families (a parent and a child each) and two specialists. The script deletes any existing database file first, so it always builds the current schema with the same sample data. Run it again after pulling changes to the schema. Anything added through the application is lost, and the backend must be stopped first, because a running server keeps using the deleted file.
+All data is synthetic. `npm run seed` creates the database file `server/database.db` with three families (a parent and a child each) and three specialists. The third family, Selin and Deniz Kaya, has demo calendar events and tasks in the current week and the next week, counted from the day the seed runs, so the pages are never empty during a demo. The script deletes any existing database file first, so it always builds the current schema with the same sample data. Run it again after pulling changes to the schema. Anything added through the application is lost, and the backend must be stopped first, because a running server keeps using the deleted file.
 
 ### Demo accounts
 
@@ -124,12 +124,17 @@ All accounts are synthetic and do not belong to real people. Every account uses 
 | Ali Şahin | ali@example.com | child | Child of Fatma |
 | Mehmet Demir | mehmet@example.com | specialist | Linked to Zeynep as a teacher |
 | Elif Arslan | elif@example.com | specialist | Not linked to any child |
+| Selin Kaya | selin@example.com | parent | Parent of Deniz |
+| Deniz Kaya | deniz@example.com | child | Child of Selin |
+| Burak Öztürk | burak@example.com | specialist | Linked to Deniz as a psychologist |
+
+**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks.
 
 For testing access control:
 
-- Mehmet is linked to Zeynep only, so he must not see Ali's data.
+- Mehmet is linked to Zeynep only, so he must not see Ali's or Deniz's data. Burak is linked to Deniz only.
 - Elif is not linked to any child, so she must not see any child's data until a parent links her. To try linking a specialist, log in as a parent and link Elif by her email.
-- Each parent sees only their own child: Fatma must not see Zeynep's data, and Ayşe must not see Ali's.
+- Each parent sees only their own child: Fatma must not see Zeynep's data, Ayşe must not see Ali's, and neither of them sees Deniz's.
 - A child sees only their own tasks and schedule.
 
 ## Configuration
