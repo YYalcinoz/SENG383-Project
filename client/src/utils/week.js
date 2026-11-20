@@ -35,3 +35,10 @@ export const formatDay = (dateString) =>
 // '2026-11-16' → '16 Nov 2026'
 export const formatDate = (dateString) =>
   toDate(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+
+// Tarayıcının yerel saatine göre bugünün tarihi (YYYY-MM-DD). Gün hesapları UTC'de yapılır,
+// ama "bugün" kullanıcının saatine göredir: UTC'de Türkiye'de gece 00:00–03:00 arası hâlâ dün olurdu.
+export function today(now = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}

@@ -5,7 +5,7 @@ import { useAuth } from '../auth/useAuth.js'
 import Loading from '../components/Loading.jsx'
 import WeekDays from '../components/WeekDays.jsx'
 import { byDateAndTime } from '../utils/events.js'
-import { addDays, formatDate, isValidDate } from '../utils/week.js'
+import { addDays, formatDate, isValidDate, today } from '../utils/week.js'
 import './SchedulePage.css'
 
 // Cevap beklenen biçimde değilse sayfa çökmesin, hata olarak gösterilsin
@@ -70,7 +70,12 @@ export default function MySchedulePage() {
           <section aria-labelledby="this-week-title">
             <h2 id="this-week-title">This week</h2>
             <p className="week-range">{weekRange(state.thisWeek.weekStart)}</p>
-            <WeekDays weekStart={state.thisWeek.weekStart} events={state.thisWeek.events} dayHeading="h3" />
+            <WeekDays
+              weekStart={state.thisWeek.weekStart}
+              events={state.thisWeek.events}
+              dayHeading="h3"
+              today={today()}
+            />
           </section>
 
           <section aria-labelledby="next-week-title">

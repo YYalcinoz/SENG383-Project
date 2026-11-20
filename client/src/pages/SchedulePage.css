@@ -23,12 +23,17 @@
 }
 
 .week-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  justify-items: center;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.week-nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .event-form {

@@ -8,7 +8,15 @@ import './WeekDays.css'
 // events: o haftanın etkinlikleri, byDateAndTime ile sıralı
 // showEmptyDays: false ise etkinliği olmayan günler hiç gösterilmez
 // dayHeading: günlerin başlık seviyesi; sayfanın başlık sırası atlanmasın diye ayarlanabilir
-export default function WeekDays({ weekStart, events, showEmptyDays = true, dayHeading: DayHeading = 'h4' }) {
+// today: bugünün tarihi (YYYY-MM-DD); o gün vurgulanır, görünür bir "Today" etiketi ve
+//   aria-current="date" alır. Etiket başlığın dışındadır, böylece günün adı ("Fri 20 Nov") değişmez.
+export default function WeekDays({
+  weekStart,
+  events,
+  showEmptyDays = true,
+  dayHeading: DayHeading = 'h4',
+  today,
+}) {
   const days = weekDays(weekStart)
     .map((day) => ({ day, events: events.filter((e) => e.eventDate === day) }))
     .filter(({ events: dayEvents }) => showEmptyDays || dayEvents.length > 0)
@@ -16,8 +24,17 @@ export default function WeekDays({ weekStart, events, showEmptyDays = true, dayH
   return (
     <ol className="week-days">
       {days.map(({ day, events: dayEvents }) => (
-        <li key={day} className="week-day" aria-labelledby={`day-${day}`}>
-          <DayHeading id={`day-${day}`}>{formatDay(day)}</DayHeading>
+        <li
+          key={day}
+          className={day === today ? 'week-day week-day--today' : 'week-day'}
+          aria-labelledby={`day-${day}`}
+          aria-current={day === today ? 'date' : undefined}
+        >
+          <div className="week-day-heading">
+            <DayHeading id={`day-${day}`}>{formatDay(day)}</DayHeading>
+            {/* Sadece renge güvenilmesin diye bugün yazıyla da belirtilir */}
+            {day === today && <span className="today-label">Today</span>}
+          </div>
           {dayEvents.length === 0 ? (
             <p className="no-events">No events</p>
           ) : (

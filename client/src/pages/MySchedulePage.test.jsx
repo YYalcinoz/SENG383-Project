@@ -79,6 +79,7 @@ const eventsOn = (title, day) =>
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.restoreAllMocks()
   localStorage.clear()
 })
@@ -278,4 +279,21 @@ test('has a link back to the child home', async () => {
   await renderPage()
 
   expect(screen.getByRole('link', { name: 'Back to home' }).getAttribute('href')).toBe('/child')
+})
+
+// --- Today (HLX-77) ---
+
+test('highlights today in This week, and never in next week', async () => {
+  // Sadece Date sahte, zamanlayıcılar gerçek kalır
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 10, 18, 10, 0))
+  await renderPage()
+  await findSection('Coming up next week')
+
+  const today = within(section('This week')).getByRole('listitem', { name: 'Wed 18 Nov' })
+  expect(today.getAttribute('aria-current')).toBe('date')
+  expect(within(today).getByText('Today')).toBeTruthy()
+  expect(section('This week').querySelectorAll('[aria-current="date"]')).toHaveLength(1)
+  expect(section('Coming up next week').querySelectorAll('[aria-current="date"]')).toHaveLength(0)
+  expect(within(section('Coming up next week')).queryByText('Today')).toBeNull()
 })
