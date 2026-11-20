@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config');
 const { get } = require('../db/helpers');
 const { authenticate } = require('../middleware/auth');
+const { loginLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const router = express.Router();
 // e-postaların kayıtlı olduğunu ele verir
 const DUMMY_HASH = bcrypt.hashSync('dummy-password', 10);
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body || {};
 
   if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {

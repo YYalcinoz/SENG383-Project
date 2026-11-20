@@ -7,8 +7,13 @@ const app = require('../src/app');
 const db = require('../src/db/database');
 const { jwtSecret } = require('../src/config');
 const { run } = require('../src/db/helpers');
+const { resetRateLimits } = require('../src/middleware/rateLimit');
 
 const login = (body) => request(app).post('/api/auth/login').send(body);
+
+// This file makes many failed logins on purpose; without the reset they would add up
+// and reach the login limit (10), and a new test would fail with 429
+beforeEach(() => resetRateLimits());
 
 describe('POST /api/auth/login', () => {
   beforeAll(async () => {
