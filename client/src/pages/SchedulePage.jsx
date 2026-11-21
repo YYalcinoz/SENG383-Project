@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { apiFetch } from '../api.js'
 import { useAuth } from '../auth/useAuth.js'
@@ -7,7 +7,7 @@ import Loading from '../components/Loading.jsx'
 import WeekDays from '../components/WeekDays.jsx'
 import { useChild, VALID_CHILD_ID } from '../hooks/useChild.js'
 import { byDateAndTime } from '../utils/events.js'
-import { addDays, formatDate, isValidDate, weekStartOf } from '../utils/week.js'
+import { addDays, formatDate, isValidDate, today, weekStartOf } from '../utils/week.js'
 import './SchedulePage.css'
 
 // Backend'deki EVENT_TYPES ile aynı olmalı (server/src/routes/schedule.js)
@@ -43,6 +43,9 @@ export default function SchedulePage() {
   const [notice, setNotice] = useState('')
   // İstek sürerken buton kapalı, ikinci istek atılmaz
   const [busy, setBusy] = useState(false)
+  // Hafta butonlarından biriyle geçilince true olur; yeni hafta gelince odak başlığa taşınır
+  const weekHeading = useRef(null)
+  const focusWeekHeading = useRef(false)
 
   useEffect(() => {
     if (!validId) return
@@ -69,10 +72,30 @@ export default function SchedulePage() {
 
   const load = result?.path === path ? result : { status: 'loading' }
 
+  // Hafta yüklenirken butonlar ekrandan kalkar ve klavye odağı sayfanın başına düşer.
+  // Yeni hafta gelince odak hafta başlığına taşınır, ekran okuyucu yeni tarihleri okur.
+  // Etkinlik başka bir haftaya eklendiğinde odak formda kalır (orada bayrak konmaz).
+  useEffect(() => {
+    if (load.status === 'loading' || !focusWeekHeading.current) return
+    focusWeekHeading.current = false
+    weekHeading.current?.focus()
+  }, [load.status, load.weekStart])
+
   function goToWeek(weekStart) {
+    focusWeekHeading.current = true
     setNotice('')
     setSearchParams({ week: weekStart })
   }
+
+  // ?week= kaldırılır; parametre yokken sunucu içinde bulunulan haftayı döner
+  function goToThisWeek() {
+    focusWeekHeading.current = true
+    setNotice('')
+    setSearchParams({})
+  }
+
+  const todayDate = today()
+  const showingThisWeek = load.status === 'ready' && load.weekStart === weekStartOf(todayDate)
 
   const setField = (name) => (event) => setForm((prev) => ({ ...prev, [name]: event.target.value }))
 
@@ -154,18 +177,24 @@ export default function SchedulePage() {
         ) : (
           <>
             <div className="week-nav">
-              <button type="button" onClick={() => goToWeek(addDays(load.weekStart, -7))}>
-                ‹ Previous week
-              </button>
-              <h3>
+              <h3 ref={weekHeading} tabIndex={-1}>
                 {formatDate(load.weekStart)} – {formatDate(addDays(load.weekStart, 6))}
               </h3>
-              <button type="button" onClick={() => goToWeek(addDays(load.weekStart, 7))}>
-                Next week ›
-              </button>
+              <div className="week-nav-buttons">
+                <button type="button" onClick={() => goToWeek(addDays(load.weekStart, -7))}>
+                  ‹ Previous week
+                </button>
+                {/* Bu haftadayken kapalı: düğmeler yer değiştirmesin diye gizlenmez */}
+                <button type="button" onClick={goToThisWeek} disabled={showingThisWeek}>
+                  This week
+                </button>
+                <button type="button" onClick={() => goToWeek(addDays(load.weekStart, 7))}>
+                  Next week ›
+                </button>
+              </div>
             </div>
 
-            <WeekDays weekStart={load.weekStart} events={load.events} />
+            <WeekDays weekStart={load.weekStart} events={load.events} today={todayDate} />
           </>
         )}
       </section>

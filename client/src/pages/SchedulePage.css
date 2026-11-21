@@ -23,12 +23,17 @@
 }
 
 .week-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  justify-items: center;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.week-nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .event-form {
@@ -69,6 +74,18 @@
 
 .schedule-page button:disabled {
   cursor: not-allowed;
+}
+
+/* Dar ekranlarda (ör. 375px) üç hafta butonu tek satıra sığsın */
+@media (max-width: 420px) {
+  .week-nav-buttons {
+    gap: 6px;
+  }
+
+  .week-nav-buttons button {
+    padding: 6px 8px;
+    font-size: 0.9em;
+  }
 }
 
 .notice:empty {

@@ -12,6 +12,28 @@
   border-radius: 8px;
 }
 
+/* Bugün: vurgu renkleri temadan gelir, koyu temada da tanımlıdır */
+.week-day--today {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.week-day-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.today-label {
+  padding: 0 8px;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-h);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+}
+
 .week-day h3,
 .week-day h4 {
   margin: 0;
@@ -37,8 +59,11 @@
   gap: 4px 12px;
 }
 
+/* Sabit genişlik: "08:30–15:30" ile "10:30" aynı genişlikte yer kaplar, başlıklar hizalı kalır */
 .event-time {
-  min-width: 96px;
+  flex: none;
+  width: 7em;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 

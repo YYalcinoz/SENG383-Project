@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -120,6 +120,7 @@ function gate(response) {
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.restoreAllMocks()
   localStorage.clear()
 })
@@ -413,4 +414,148 @@ test.each([
 
   const nav = await screen.findByRole('navigation', { name: 'Zeynep Yılmaz modules' })
   expect(within(nav).getByRole('link', { name: 'Schedule' }).getAttribute('href')).toBe(href)
+})
+
+// --- Today and the This week button (HLX-77) ---
+
+// Bugünü sabitler: sadece Date sahte, zamanlayıcılar gerçek kalır (userEvent ve findBy… için)
+const setToday = (year, month, day) => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(year, month - 1, day, 10, 0))
+}
+const highlightedDays = () =>
+  [...document.querySelectorAll('[aria-current="date"]')].map((li) => li.querySelector('h4').textContent)
+
+test('highlights today in the current week, with a visible label and aria-current', async () => {
+  setToday(2026, 11, 18)
+  await renderPage()
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  expect(highlightedDays()).toEqual(['Wed 18 Nov'])
+  expect(dayItem('Wed 18 Nov').getAttribute('aria-current')).toBe('date')
+  expect(within(dayItem('Wed 18 Nov')).getByText('Today')).toBeTruthy()
+  expect(screen.getAllByText('Today')).toHaveLength(1)
+  // Etiket başlığın dışında: günün adı değişmez
+  expect(within(dayItem('Wed 18 Nov')).getByRole('heading').textContent).toBe('Wed 18 Nov')
+})
+
+test('no day is highlighted in another week', async () => {
+  setToday(2026, 11, 18)
+  await renderPage(`${PAGE}?week=2026-11-25`, {
+    routes: { [`GET ${API}?weekStart=2026-11-25`]: week('2026-11-23', [DENTIST]) },
+  })
+  await findWeek('23 Nov 2026 – 29 Nov 2026')
+
+  expect(highlightedDays()).toEqual([])
+  expect(screen.queryByText('Today')).toBeNull()
+})
+
+test('the This week button is disabled while the current week is shown', async () => {
+  setToday(2026, 11, 18)
+  await renderPage()
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  expect(screen.getByRole('button', { name: 'This week' }).disabled).toBe(true)
+})
+
+test('This week goes back to the current week and removes the week from the address', async () => {
+  setToday(2026, 11, 18)
+  const user = userEvent.setup()
+  const fetchSpy = await renderPage(`${PAGE}?week=2026-11-25`, {
+    routes: { [`GET ${API}?weekStart=2026-11-25`]: week('2026-11-23', [DENTIST]) },
+  })
+  await findWeek('23 Nov 2026 – 29 Nov 2026')
+  const thisWeek = screen.getByRole('button', { name: 'This week' })
+  expect(thisWeek.disabled).toBe(false)
+
+  await user.click(thisWeek)
+
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+  expect(currentAddress()).toBe(PAGE)
+  // Parametre yok: hangi haftanın "bu hafta" olduğuna sunucu karar verir
+  expect(requests(fetchSpy).at(-1)).toBe(`GET ${API}`)
+  expect(screen.getByRole('button', { name: 'This week' }).disabled).toBe(true)
+  expect(highlightedDays()).toEqual(['Wed 18 Nov'])
+})
+
+test('This week clears an earlier success message', async () => {
+  setToday(2026, 11, 18)
+  const user = userEvent.setup()
+  const concert = event(10, 'Concert', '2026-12-03', '18:00', null, 'other')
+  await renderPage(PAGE, {
+    routes: {
+      [`POST ${API}`]: async () => jsonResponse({ event: concert }, 201),
+      [`GET ${API}?weekStart=2026-11-30`]: week('2026-11-30', [concert]),
+    },
+  })
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+  await fillForm(user, { title: 'Concert', eventDate: '2026-12-03', startTime: '18:00', eventType: 'other' })
+  await user.click(addButton())
+  await findWeek('30 Nov 2026 – 6 Dec 2026')
+  expect(screen.getByText('Concert was added on 3 Dec 2026 at 18:00.')).toBeTruthy()
+
+  await user.click(screen.getByRole('button', { name: 'This week' }))
+
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+  expect(screen.queryByText(/was added on/)).toBeNull()
+})
+
+// --- Keyboard focus after changing the week (HLX-77, #51 review) ---
+
+// Butona klavyeyle basılır: odak butona konur, Enter gönderilir
+async function pressWithKeyboard(user, name) {
+  screen.getByRole('button', { name }).focus()
+  await user.keyboard('{Enter}')
+}
+
+test.each([
+  ['Next week ›', '2026-11-23', '23 Nov 2026 – 29 Nov 2026'],
+  ['‹ Previous week', '2026-11-09', '9 Nov 2026 – 15 Nov 2026'],
+])('after %s the focus moves to the new week heading', async (button, weekStart, range) => {
+  const user = userEvent.setup()
+  await renderPage(PAGE, { routes: { [`GET ${API}?weekStart=${weekStart}`]: week(weekStart) } })
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  await pressWithKeyboard(user, button)
+
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: range })))
+})
+
+test('after This week the focus moves to the current week heading', async () => {
+  setToday(2026, 11, 18)
+  const user = userEvent.setup()
+  await renderPage(`${PAGE}?week=2026-11-25`, {
+    routes: { [`GET ${API}?weekStart=2026-11-25`]: week('2026-11-23', [DENTIST]) },
+  })
+  await findWeek('23 Nov 2026 – 29 Nov 2026')
+
+  await pressWithKeyboard(user, 'This week')
+
+  await waitFor(() =>
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: '16 Nov 2026 – 22 Nov 2026' })),
+  )
+})
+
+test('the focus stays where it is when the page first opens', async () => {
+  await renderPage()
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  expect(document.activeElement).toBe(document.body)
+})
+
+test('adding an event to another week does not move the focus to the week heading', async () => {
+  const user = userEvent.setup()
+  const concert = event(10, 'Concert', '2026-12-03', '18:00', null, 'other')
+  await renderPage(PAGE, {
+    routes: {
+      [`POST ${API}`]: async () => jsonResponse({ event: concert }, 201),
+      [`GET ${API}?weekStart=2026-11-30`]: week('2026-11-30', [concert]),
+    },
+  })
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+  await fillForm(user, { title: 'Concert', eventDate: '2026-12-03', startTime: '18:00', eventType: 'other' })
+  await user.click(addButton())
+
+  const heading = await findWeek('30 Nov 2026 – 6 Dec 2026')
+  expect(document.activeElement).not.toBe(heading)
 })

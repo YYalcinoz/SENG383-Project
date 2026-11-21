@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { addDays, formatDate, formatDay, isValidDate, weekDays, weekStartOf } from './week.js'
+import { addDays, formatDate, formatDay, isValidDate, today, weekDays, weekStartOf } from './week.js'
 
 test.each([
   ['2026-11-16', '2026-11-16'],
@@ -62,6 +62,11 @@ describe('in a time zone behind UTC (America/Los_Angeles)', () => {
     else process.env.TZ = originalTimeZone
   })
 
+  test("today() gives the user's local date, not the UTC date", () => {
+    // UTC'de 17 Kasım 05:00; Los Angeles'ta hâlâ 16 Kasım akşamı
+    expect(today(new Date('2026-11-17T05:00:00Z'))).toBe('2026-11-16')
+  })
+
   test('the time zone change really took effect', () => {
     // Bu kontrol olmadan, saat dilimi değişmeseydi aşağıdaki testler bir şey kanıtlamazdı
     expect(new Date('2026-11-16T00:00:00Z').getDate()).toBe(15)
@@ -78,4 +83,9 @@ describe('in a time zone behind UTC (America/Los_Angeles)', () => {
     expect(addDays('2026-11-16', 6)).toBe('2026-11-22')
     expect(weekDays('2026-11-16')[0]).toBe('2026-11-16')
   })
+})
+
+test('today() gives the local date in YYYY-MM-DD format', () => {
+  expect(today(new Date(2026, 10, 9, 1, 30))).toBe('2026-11-09')
+  expect(today(new Date(2027, 0, 1, 23, 59))).toBe('2027-01-01')
 })
