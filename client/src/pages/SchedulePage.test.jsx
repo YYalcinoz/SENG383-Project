@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -498,4 +498,64 @@ test('This week clears an earlier success message', async () => {
 
   await findWeek('16 Nov 2026 – 22 Nov 2026')
   expect(screen.queryByText(/was added on/)).toBeNull()
+})
+
+// --- Keyboard focus after changing the week (HLX-77, #51 review) ---
+
+// Butona klavyeyle basılır: odak butona konur, Enter gönderilir
+async function pressWithKeyboard(user, name) {
+  screen.getByRole('button', { name }).focus()
+  await user.keyboard('{Enter}')
+}
+
+test.each([
+  ['Next week ›', '2026-11-23', '23 Nov 2026 – 29 Nov 2026'],
+  ['‹ Previous week', '2026-11-09', '9 Nov 2026 – 15 Nov 2026'],
+])('after %s the focus moves to the new week heading', async (button, weekStart, range) => {
+  const user = userEvent.setup()
+  await renderPage(PAGE, { routes: { [`GET ${API}?weekStart=${weekStart}`]: week(weekStart) } })
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  await pressWithKeyboard(user, button)
+
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: range })))
+})
+
+test('after This week the focus moves to the current week heading', async () => {
+  setToday(2026, 11, 18)
+  const user = userEvent.setup()
+  await renderPage(`${PAGE}?week=2026-11-25`, {
+    routes: { [`GET ${API}?weekStart=2026-11-25`]: week('2026-11-23', [DENTIST]) },
+  })
+  await findWeek('23 Nov 2026 – 29 Nov 2026')
+
+  await pressWithKeyboard(user, 'This week')
+
+  await waitFor(() =>
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: '16 Nov 2026 – 22 Nov 2026' })),
+  )
+})
+
+test('the focus stays where it is when the page first opens', async () => {
+  await renderPage()
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+
+  expect(document.activeElement).toBe(document.body)
+})
+
+test('adding an event to another week does not move the focus to the week heading', async () => {
+  const user = userEvent.setup()
+  const concert = event(10, 'Concert', '2026-12-03', '18:00', null, 'other')
+  await renderPage(PAGE, {
+    routes: {
+      [`POST ${API}`]: async () => jsonResponse({ event: concert }, 201),
+      [`GET ${API}?weekStart=2026-11-30`]: week('2026-11-30', [concert]),
+    },
+  })
+  await findWeek('16 Nov 2026 – 22 Nov 2026')
+  await fillForm(user, { title: 'Concert', eventDate: '2026-12-03', startTime: '18:00', eventType: 'other' })
+  await user.click(addButton())
+
+  const heading = await findWeek('30 Nov 2026 – 6 Dec 2026')
+  expect(document.activeElement).not.toBe(heading)
 })

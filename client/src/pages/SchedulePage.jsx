@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { apiFetch } from '../api.js'
 import { useAuth } from '../auth/useAuth.js'
@@ -43,6 +43,9 @@ export default function SchedulePage() {
   const [notice, setNotice] = useState('')
   // İstek sürerken buton kapalı, ikinci istek atılmaz
   const [busy, setBusy] = useState(false)
+  // Hafta butonlarından biriyle geçilince true olur; yeni hafta gelince odak başlığa taşınır
+  const weekHeading = useRef(null)
+  const focusWeekHeading = useRef(false)
 
   useEffect(() => {
     if (!validId) return
@@ -69,13 +72,24 @@ export default function SchedulePage() {
 
   const load = result?.path === path ? result : { status: 'loading' }
 
+  // Hafta yüklenirken butonlar ekrandan kalkar ve klavye odağı sayfanın başına düşer.
+  // Yeni hafta gelince odak hafta başlığına taşınır, ekran okuyucu yeni tarihleri okur.
+  // Etkinlik başka bir haftaya eklendiğinde odak formda kalır (orada bayrak konmaz).
+  useEffect(() => {
+    if (load.status === 'loading' || !focusWeekHeading.current) return
+    focusWeekHeading.current = false
+    weekHeading.current?.focus()
+  }, [load.status, load.weekStart])
+
   function goToWeek(weekStart) {
+    focusWeekHeading.current = true
     setNotice('')
     setSearchParams({ week: weekStart })
   }
 
   // ?week= kaldırılır; parametre yokken sunucu içinde bulunulan haftayı döner
   function goToThisWeek() {
+    focusWeekHeading.current = true
     setNotice('')
     setSearchParams({})
   }
@@ -163,7 +177,7 @@ export default function SchedulePage() {
         ) : (
           <>
             <div className="week-nav">
-              <h3>
+              <h3 ref={weekHeading} tabIndex={-1}>
                 {formatDate(load.weekStart)} – {formatDate(addDays(load.weekStart, 6))}
               </h3>
               <div className="week-nav-buttons">

@@ -76,6 +76,18 @@
   cursor: not-allowed;
 }
 
+/* Dar ekranlarda (ör. 375px) üç hafta butonu tek satıra sığsın */
+@media (max-width: 420px) {
+  .week-nav-buttons {
+    gap: 6px;
+  }
+
+  .week-nav-buttons button {
+    padding: 6px 8px;
+    font-size: 0.9em;
+  }
+}
+
 .notice:empty {
   display: none;
 }
