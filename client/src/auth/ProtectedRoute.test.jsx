@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -159,8 +159,9 @@ test('someone sent to the login page from another role page ends up on their own
 
   expect(await screen.findByRole('heading', { name: 'Parent home' })).toBeTruthy()
   expect(screen.queryByRole('heading', { name: 'Child home' })).toBeNull()
-  // Tek bir login isteği; sonra ana sayfa çocuk listesini ister
-  expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children'])
+  // One login request, then the home page asks for the child list. The list asks in an
+  // effect after the heading appears, so the check waits for it instead of reading it at once
+  await waitFor(() => expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children']))
 })
 
 test('Log out removes the token and shows the login page', async () => {
