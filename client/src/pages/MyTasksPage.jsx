@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api.js'
 import { useAuth } from '../auth/useAuth.js'
@@ -23,6 +23,9 @@ export default function MyTasksPage() {
   const [saving, setSaving] = useState([])
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  // Hangi görevlerin isteği sürüyor: state sonraki çizime kadar eski kalır, bu yüzden aynı
+  // anda gelen ikinci çağrıyı yakalamak için ref kullanılır
+  const inFlight = useRef(new Set())
 
   useEffect(() => {
     // Sayfa cevaptan önce kapanırsa (ör. logout) gelen cevap state'e yazılmaz
@@ -47,7 +50,8 @@ export default function MyTasksPage() {
   const load = result?.path === path ? result : { status: 'loading' }
 
   async function markDone(task) {
-    if (saving.includes(task.id)) return // çift tıklama ikinci bir istek atmasın
+    if (inFlight.current.has(task.id)) return // çift tıklama ikinci bir istek atmasın
+    inFlight.current.add(task.id)
     setError('')
     setNotice('')
     setSaving((ids) => [...ids, task.id])
@@ -65,6 +69,7 @@ export default function MyTasksPage() {
       // Backend mesajı olduğu gibi gösterilir (ör. "Task not found")
       setError(err.message)
     } finally {
+      inFlight.current.delete(task.id)
       setSaving((ids) => ids.filter((id) => id !== task.id))
     }
   }
