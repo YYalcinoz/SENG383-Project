@@ -42,13 +42,13 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 | PMP-1 | Yağız Yalçınöz | 5 | Sprint 1 |
 | PMP-2 | Yağız Yalçınöz | 1 | Sprint 2 |
 | PMP-3 | Yağız Yalçınöz | 1 | Sprints 3–4 |
-| PMP-4 | Yağız Yalçınöz | 0 | Sprint 5 |
+| PMP-4 | Yağız Yalçınöz | 1 | Sprint 5 |
 | PMP-5 | Yağız Yalçınöz | 0 | Sprint 7 |
 | PMP-6 | Yağız Yalçınöz | 0 | Sprint 8 |
-| M1 | Yağız Yalçınöz | 19 | Sprint 2 (walking skeleton), Sprints 3–4 |
-| M2 | Yağız Yalçınöz | 4 | Sprints 3–5 |
-| M3 | Zeynep Dila Tetik | 5 | Sprints 3–5 |
-| M4 | Kerem Alp Ustaoğlu | 3 | Sprints 4–5 |
+| M1 | Yağız Yalçınöz | 24 | Sprint 2 (walking skeleton), Sprints 3–4 |
+| M2 | Yağız Yalçınöz | 6 | Sprints 3–5 |
+| M3 | Zeynep Dila Tetik | 6 | Sprints 3–5 |
+| M4 | Kerem Alp Ustaoğlu | 4 | Sprints 4–5 |
 | M5 | Zeynep Dila Tetik | 0 | Sprints 5–6 |
 | M6 | Yağız Yalçınöz | 0 | Sprints 5–6 |
 | M7 | Kerem Alp Ustaoğlu | 0 | Sprints 6–7 |
@@ -56,7 +56,7 @@ The Jira space uses the Scrum template with the board columns To Do → In Progr
 | SRS | Kerem Alp Ustaoğlu | 6 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
 | DESIGN | Kerem Alp Ustaoğlu | 8 | Sprint 2 (first version), Sprint 3 (remaining sections), Sprint 7 (final) |
 
-Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner is responsible for the module and creates its tasks at the start of the sprints in which it is planned; individual tasks may be assigned to other team members. The task counts above show the state at the end of Sprint 4 and will grow accordingly.
+Walking skeleton tasks are tracked under M1, as the skeleton is the foundation of the first module. Each module owner is responsible for the module and creates its tasks at the start of the sprints in which it is planned; individual tasks may be assigned to other team members. The task counts above show the state at the end of Sprint 5 and will grow accordingly.
 
 ### Sprint Plan
 
@@ -119,14 +119,34 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 ## PMP-4. Progress Review: v0.2
 
+The course schedule names this review v0.2; in our plan v0.2 is released in Sprint 7, so this review covers the state at the v0.1 release.
+
 **Jira board screenshot:**  
+
+![Jira board at the end of Sprint 5](img/sprint5-board.png)
+
+*Board at the end of Sprint 5 (22 Nov 2026): 7 of 8 tasks done; only this PMP section was still open when the screenshot was taken.*
 
 | Epic | Planned for this point | Status (Done / In progress / Not started) |
 |---|---|---|
-| | | |
-| | | |
+| M1 | Release v0.1 | Done: v0.1 was released on 22 Nov 2026 as a tagged GitHub Release (HLX-80), with the README updated for it (HLX-84) |
+| M2 | Complete | Done: rate limiting (HLX-78) and the Flow 1 end-to-end test (HLX-79) completed the module |
+| M3 | Complete | Done: all Must requirements were done in Sprint 4 (see PMP-3). Sprint 5 added the "This week" button and the highlighted current day (HLX-77) and demo data in the seed (HLX-82); the monthly view (FR-M3-06, Could) is not started |
+| M4 | Complete | Done: all Must requirements were done in Sprint 4 (see PMP-3). Sprint 5 added database checks that keep a task's status and completion time consistent (HLX-83); the overdue label (FR-M4-09, Could) is not started |
+| M5 | In progress | Not started: moved to Sprint 6 (see below) |
+| M6 | In progress | Not started: moved to Sprint 6 (see below) |
+| M8 | In progress | Not started: moved to Sprint 6 (see below); the design of the AI module is already in the SDD |
+
+**Quality at this point:** 362 server tests, 294 client tests and 6 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 92.7% on the client. Before the release, the whole code base was reviewed for security, including requests that try to reach another user's data; no serious problem was found, and two minor findings are planned for Sprint 6 (HLX-86). CodeQL and Dependabot report no open alerts.
 
 **Changes to the plan (if any):**
+
+- **M5, M6 and M8 start in Sprint 6:** These modules were planned to start in Sprint 5. Because Sprint 5 fell in the midterm exam week, its scope was limited to completing M1–M4 and releasing v0.1 (see PMP-3), so all three start in Sprint 6. The Sprint 6 goal stays the same (M5 and M6 complete, M8 mock mode); if it is not reached, the remaining work moves to Sprint 7.
+- **Release before the demo:** v0.1 was released on 22 Nov 2026, at the end of Sprint 5 as planned. The Week 9 buffer before our mid-term demo (Section 2) was not needed.
+- **Unplanned task from code review:** The review of the child's "My tasks" page showed that the database did not check that a task's status and completion time match. This was added as its own task (HLX-83).
+- **Demo data as its own task:** Demo data was not in the plan. It was added in HLX-82, with dates counted from the day the seed runs, so the pages are filled on any demo day. The accounts used by the end-to-end tests were left unchanged.
+- **Flaky tests:** Two client tests sometimes failed in CI because they checked a request before the page had sent it. They were fixed in Sprint 5. The fix was tracked under the release task (HLX-80), and the Jira automation moved that task to Done when the fix was merged, before the release; we moved it back by hand. Small fixes like this now get a task of their own.
+- **Security tooling:** Rate limiting closed all CodeQL alerts that were open at the end of Sprint 4.
 
 ---
 
