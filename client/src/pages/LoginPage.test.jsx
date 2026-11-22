@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -69,8 +69,9 @@ test('can be submitted with the Enter key', async () => {
   await user.type(screen.getByLabelText('Password'), 'password123{Enter}')
 
   expect(await screen.findByRole('heading', { name: 'Parent home' })).toBeTruthy()
-  // Tek bir login isteği; sonra ana sayfa çocuk listesini ister
-  expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children'])
+  // One login request, then the home page asks for the child list. The list asks in an
+  // effect after the heading appears, so the check waits for it instead of reading it at once
+  await waitFor(() => expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual(['/api/auth/login', '/api/children']))
 })
 
 test('a wrong password shows the backend message, stores no token and clears the password', async () => {
