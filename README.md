@@ -6,7 +6,22 @@ SENG 383 Software Project III (Fall 2026) term project by **Team Helix**.
 
 A web-based decision support platform that brings parents, specialists and children together around a shared weekly schedule, task list and observation record. An AI component summarizes the week's records for each reader according to their role; it supports decisions and never makes them.
 
-> **Status: walking skeleton (v0.0).** The frontend, backend and database are connected, and their tests run in CI on every pull request. Features are added module by module (M1–M8); see `docs/PMP.md` for the plan.
+> **Status: v0.1 (mid-term release).** Modules M1–M4 are ready: login and roles, linking specialists, the weekly schedule and tasks. Modules M5–M8 are not started yet. The frontend, backend and database are connected, and their tests run in CI on every pull request. Released versions are listed on the [Releases page](https://github.com/YYalcinoz/SENG383-Project/releases); see `docs/PMP.md` for the plan.
+
+## Modules
+
+| Module | Status | What you can do |
+|---|---|---|
+| M1 – Login and roles | Ready | Log in with email and password and log out. Parents, specialists and children each see only their own screens. |
+| M2 – Linking specialists | Ready | A parent links a registered specialist to their child by email and unlinks them after a confirmation step. A specialist sees the children linked to them. |
+| M3 – Weekly schedule | Ready | Parents and linked specialists see a child's week and add events. A child sees their own schedule. |
+| M4 – Tasks | Ready | Parents and linked specialists assign tasks and see their status. A child sees their own tasks and marks them as done. |
+| M5 – Specialist entries | Not started | |
+| M6 – Documents | Not started | |
+| M7 – Weekly statistics | Not started | |
+| M8 – Role-based AI summary | Not started | |
+
+The monthly view (FR-M3-06) and the "Overdue" label (FR-M4-09) are "Could" requirements and are not part of v0.1.
 
 ## Team
 
@@ -68,6 +83,8 @@ npm run dev
 
 Open http://localhost:5173 in your browser. The login page should open. Log in with one of the [demo accounts](#demo-accounts) below (password `password123`). If the page says "Cannot reach the server", check that the backend in terminal 1 is running.
 
+**Login limit:** after 10 failed login attempts from the same IP address, login is blocked for 15 minutes; successful logins are not counted. The counters are kept in memory, so restarting the backend resets them. While you develop, all browsers on your machine share one IP address, so mistyped passwords of different users add up. Linking a specialist (20 failed attempts per parent) and the API as a whole (1000 requests per 15 minutes) have limits too.
+
 ## Running the tests
 
 Unit and API tests:
@@ -105,6 +122,7 @@ In GitHub Actions, every pull request runs the server and client tests with cove
 |---|---|
 | `npm install` warns about an unsupported engine, or the app fails to start | Check `node -v`; Node.js 22 or later is required. |
 | The login page says "Cannot reach the server" | Start the backend (`cd server` then `npm start`) and reload the page. |
+| The login page says "Too many failed login attempts, please try again in 15 minutes" | Wait 15 minutes, or stop the backend and run `npm start` again to reset the counter. |
 | `Error: listen EADDRINUSE` on port 3000 | Another program (often an earlier backend that is still running) uses port 3000. Stop it and run `npm start` again; the frontend expects the backend on port 3000. |
 | Vite starts on 5174 instead of 5173 | Port 5173 is in use; open the address that Vite prints in the terminal. |
 
@@ -128,7 +146,7 @@ All accounts are synthetic and do not belong to real people. Every account uses 
 | Deniz Kaya | deniz@example.com | child | Child of Selin |
 | Burak Öztürk | burak@example.com | specialist | Linked to Deniz as a psychologist |
 
-**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks.
+**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks. Because the dates are counted from the day the seed runs, run npm run seed again on the day of the demo.
 
 For testing access control:
 
@@ -167,4 +185,5 @@ docs/                    SRS, SDD and PMP
 - [Software Requirements Specification](docs/SRS.md)
 - [Software Design Document](docs/SDD.md)
 - [Project Management Plan](docs/PMP.md)
+- [Releases](https://github.com/YYalcinoz/SENG383-Project/releases)
 - [Jira board](https://teamhelix.atlassian.net/jira/software/projects/HLX/boards/1)
