@@ -167,6 +167,30 @@ test('the My tasks item on the child home page opens this page', async () => {
   expect(currentAddress()).toBe('/child/tasks')
 })
 
+test('the Back to home link points to the child home page', async () => {
+  await renderPage()
+
+  // Adrese bakmak yetmez: yanlış bir bağlantıya tıklayan kullanıcıyı ProtectedRoute zaten kendi
+  // ana sayfasına yönlendirir. Bu yüzden bağlantının kendisi de kontrol edilir.
+  expect(screen.getByRole('link', { name: 'Back to home' }).getAttribute('href')).toBe('/child')
+})
+
+test('the Back to home link on the error page points to the child home page', async () => {
+  renderAt(PAGE, { routes: { [`GET ${API}`]: () => jsonResponse({ error: 'You do not have permission to do this' }, 403) } })
+  await screen.findByRole('alert')
+
+  expect(screen.getByRole('link', { name: 'Back to home' }).getAttribute('href')).toBe('/child')
+})
+
+test('each button is described by the title of its own task', async () => {
+  await renderPage()
+
+  for (const title of ['Dress alone', 'Read 10 pages']) {
+    const describedBy = doneButton(title).getAttribute('aria-describedby')
+    expect(document.getElementById(describedBy).textContent).toBe(title)
+  }
+})
+
 // --- Marking a task as done (FR-M4-05) ---
 
 test('marks a task as done: sends PATCH without a body, shows it as done and keeps the other tasks', async () => {
@@ -279,6 +303,60 @@ test('an old error disappears when the next attempt starts', async () => {
 
   expect((await screen.findByRole('status')).textContent).toBe('Marked as done: Read 10 pages')
   expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test('several tasks can be saving at the same time and each one is released when its own request ends', async () => {
+  const user = userEvent.setup()
+  const read = gate(donePatch(1))
+  const dress = gate(donePatch(3, { title: 'Dress alone' }))
+  await renderPage({ routes: { [`PATCH ${API}/1/done`]: read.handler, [`PATCH ${API}/3/done`]: dress.handler } })
+
+  await user.click(doneButton('Read 10 pages'))
+  await user.click(doneButton('Dress alone'))
+  expect(doneButton('Read 10 pages').disabled).toBe(true)
+  expect(doneButton('Dress alone').disabled).toBe(true)
+
+  await act(async () => dress.release())
+  expect(doneButton('Dress alone')).toBeNull()
+  // Okuma görevinin isteği hâlâ sürüyor, düğmesi kapalı kalmalı
+  expect(doneButton('Read 10 pages').disabled).toBe(true)
+
+  await act(async () => read.release())
+  expect(doneButton('Read 10 pages')).toBeNull()
+})
+
+test('two clicks in the same instant send only one request', async () => {
+  const slow = gate(donePatch(1))
+  const { fetchSpy } = await renderPage({ routes: { [`PATCH ${API}/1/done`]: slow.handler } })
+  const button = doneButton('Read 10 pages')
+
+  // İki tıklama da React düğmeyi "kapalı" olarak yeniden çizmeden önce gelir
+  act(() => {
+    button.click()
+    button.click()
+  })
+
+  expect(fetchSpy.mock.calls.filter(([, options]) => options?.method === 'PATCH')).toHaveLength(1)
+  await act(async () => slow.release())
+  expect((await screen.findByRole('status')).textContent).toBe('Marked as done: Read 10 pages')
+})
+
+test('the notice of a successful save disappears when the next attempt starts', async () => {
+  const user = userEvent.setup()
+  await renderPage({
+    routes: {
+      [`PATCH ${API}/1/done`]: donePatch(1),
+      [`PATCH ${API}/3/done`]: () => jsonResponse({ error: 'Task not found' }, 404),
+    },
+  })
+
+  await user.click(doneButton('Read 10 pages'))
+  expect((await screen.findByRole('status')).textContent).toBe('Marked as done: Read 10 pages')
+
+  await user.click(doneButton('Dress alone'))
+
+  expect((await screen.findByRole('alert')).textContent).toBe('Task not found')
+  expect(screen.getByRole('status').textContent).toBe('')
 })
 
 // --- Errors and access ---

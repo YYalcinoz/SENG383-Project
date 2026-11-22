@@ -2,7 +2,7 @@
 
 **Team name:** Team Helix  
 **Version:** ☒ First version (Week 6) ☐ Final (Week 10)  
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-22
 
 ---
 
@@ -208,6 +208,7 @@ erDiagram
 - Uploaded files are stored on disk under a random name, so user-supplied file names are never used as paths.
 - A task belongs to one child and was assigned by one user (the parent or a linked specialist). Every task starts with the status `todo`; only the child can change it to `done`.
 - `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
+- The database also enforces that `done_at` is set exactly when `status` is `done`, and that it has the format of `CURRENT_TIMESTAMP` (`YYYY-MM-DD HH:MM:SS`, UTC). An existing database file keeps its old table; `npm run seed` rebuilds it with the current rules.
 - M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
 - `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist. FR-M3-01 asks for one time, so `start_time` is required and `end_time` is optional; when it is given, it must be after `start_time`. Dates are stored as `YYYY-MM-DD` and times as `HH:MM`, and `CHECK` constraints reject any other format, because the weekly view and M8 compare dates as text (`event_date BETWEEN ...`), which only works when every date has the same format.
 - `SPECIALIST_ENTRIES` store observations made by linked specialists. `entry_date` is the date of the observation, entered by the specialist (FR-M5-01); it can differ from `created_at`, which is when the entry was saved. The `is_edited` flag is set to true if the entry is updated after creation.
@@ -523,3 +524,4 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-10 | Child list on the parent and specialist home pages | Yağız Yalçınöz |
 | 2026-11-13 | Tasks API format added | Kerem Alp Ustaoğlu |
 | 2026-11-13 | Calendar events API format added | Zeynep Dila Tetik |
+| 2026-11-22 | Status checks of the tasks table described | Kerem Alp Ustaoğlu |
