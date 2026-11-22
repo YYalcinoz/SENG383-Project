@@ -23,12 +23,22 @@ describe('tasks', () => {
       title: 'Read 10 pages',
       development_area: 'language',
       due_date: '2026-11-20',
+      status: 'todo',
+      done_at: null,
       ...changes,
     };
     return run(
-      `INSERT INTO tasks (child_id, assigner_id, title, development_area, due_date)
-        VALUES (?, ?, ?, ?, ?)`,
-      [task.child_id, task.assigner_id, task.title, task.development_area, task.due_date]
+      `INSERT INTO tasks (child_id, assigner_id, title, development_area, due_date, status, done_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        task.child_id,
+        task.assigner_id,
+        task.title,
+        task.development_area,
+        task.due_date,
+        task.status,
+        task.done_at,
+      ]
     );
   };
 
@@ -88,15 +98,78 @@ describe('tasks', () => {
     }
   );
 
-  test.each(['todo', 'done'])('accepts the status "%s"', async (status) => {
-    const { lastID } = await addTask();
-    const { changes } = await run('UPDATE tasks SET status = ? WHERE id = ?', [status, lastID]);
-    expect(changes).toBe(1);
+  test('accepts a task that is todo without done_at and a task that is done with done_at', async () => {
+    expect((await addTask({ status: 'todo', done_at: null })).changes).toBe(1);
+    expect((await addTask({ status: 'done', done_at: '2026-11-14 08:30:00' })).changes).toBe(1);
   });
 
   test('rejects an unknown status', async () => {
-    const { lastID } = await addTask();
-    await expect(run("UPDATE tasks SET status = 'finished' WHERE id = ?", [lastID])).rejects.toThrow(/CHECK/);
+    await expect(addTask({ status: 'finished', done_at: '2026-11-14 08:30:00' })).rejects.toThrow(/CHECK/);
+  });
+
+  describe('status and done_at belong together', () => {
+    test('rejects a task that is done but has no done_at', async () => {
+      await expect(addTask({ status: 'done', done_at: null })).rejects.toThrow(/CHECK/);
+    });
+
+    test('rejects a task that is todo but has a done_at', async () => {
+      await expect(addTask({ status: 'todo', done_at: '2026-11-14 08:30:00' })).rejects.toThrow(/CHECK/);
+    });
+
+    test('rejects marking a task as done without setting done_at', async () => {
+      const { lastID } = await addTask();
+      await expect(run("UPDATE tasks SET status = 'done' WHERE id = ?", [lastID])).rejects.toThrow(/CHECK/);
+    });
+
+    test('accepts marking a task as done when done_at is set in the same update', async () => {
+      const { lastID } = await addTask();
+      const { changes } = await run(
+        "UPDATE tasks SET status = 'done', done_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [lastID]
+      );
+      expect(changes).toBe(1);
+    });
+
+    test('rejects removing done_at from a task that is done', async () => {
+      const { lastID } = await addTask({ status: 'done', done_at: '2026-11-14 08:30:00' });
+      await expect(run('UPDATE tasks SET done_at = NULL WHERE id = ?', [lastID])).rejects.toThrow(/CHECK/);
+    });
+
+    test('rejects setting a done_at on a task that is still todo', async () => {
+      const { lastID } = await addTask();
+      await expect(
+        run("UPDATE tasks SET done_at = '2026-11-14 08:30:00' WHERE id = ?", [lastID])
+      ).rejects.toThrow(/CHECK/);
+    });
+
+    test('rejects putting a done task back to todo while done_at is still set', async () => {
+      const { lastID } = await addTask({ status: 'done', done_at: '2026-11-14 08:30:00' });
+      await expect(run("UPDATE tasks SET status = 'todo' WHERE id = ?", [lastID])).rejects.toThrow(/CHECK/);
+    });
+  });
+
+  describe('done_at has the format of CURRENT_TIMESTAMP (UTC)', () => {
+    test('accepts the value that the database itself writes with CURRENT_TIMESTAMP', async () => {
+      const { lastID } = await addTask();
+      await run("UPDATE tasks SET status = 'done', done_at = CURRENT_TIMESTAMP WHERE id = ?", [lastID]);
+
+      const row = await get('SELECT done_at FROM tasks WHERE id = ?', [lastID]);
+
+      expect(row.done_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    });
+
+    test.each([
+      ['an ISO time with T and Z', '2026-11-14T08:30:00Z'],
+      ['a date without a time', '2026-11-14'],
+      ['a time without seconds', '2026-11-14 08:30'],
+      ['a month that does not exist', '2026-13-01 08:30:00'],
+      ['a day that does not exist', '2026-02-30 08:30:00'],
+      ['an hour that does not exist', '2026-11-14 25:00:00'],
+      ['text that is not a date', 'yesterday'],
+      ['an empty string', ''],
+    ])('rejects done_at with %s', async (_name, value) => {
+      await expect(addTask({ status: 'done', done_at: value })).rejects.toThrow(/CHECK/);
+    });
   });
 
   test('rejects a task for a child that does not exist', async () => {

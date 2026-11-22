@@ -59,7 +59,8 @@ db.serialize(() => {
   // M4: görevler. due_date, calendar_events.event_date ile aynı kuralla YYYY-MM-DD
   // olarak saklanır ve biçim veritabanında da kontrol edilir (M7 haftalık sayımı
   // tarihleri metin olarak karşılaştırır). description boş bırakılabilir, bu yüzden
-  // varsayılanı ''. done_at yalnızca çocuk görevi bitirince dolar.
+  // varsayılanı ''. done_at yalnızca çocuk görevi bitirince dolar: status 'done' ise done_at dolu,
+  // 'todo' ise boştur (son CHECK) ve done_at, CURRENT_TIMESTAMP ile aynı biçimde (UTC) olmalıdır.
   db.run(`CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     child_id INTEGER NOT NULL REFERENCES users(id),
@@ -72,7 +73,8 @@ db.serialize(() => {
     due_date TEXT NOT NULL CHECK(date(due_date) IS due_date),
     status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo', 'done')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    done_at TEXT
+    done_at TEXT CHECK(done_at IS NULL OR datetime(done_at) IS done_at),
+    CHECK((status = 'done') = (done_at IS NOT NULL))
   )`);
 });
 
