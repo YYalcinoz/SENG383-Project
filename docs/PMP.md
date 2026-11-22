@@ -119,6 +119,8 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 
 ## PMP-4. Progress Review: v0.2
 
+The course schedule names this review v0.2; in our plan v0.2 is released in Sprint 7, so this review covers the state at the v0.1 release.
+
 **Jira board screenshot:**  
 
 ![Jira board at the end of Sprint 5](img/sprint5-board.png)
@@ -129,13 +131,13 @@ We use one-week sprints (Monday–Sunday) that follow the weekly course schedule
 |---|---|---|
 | M1 | Release v0.1 | Done: v0.1 was released on 22 Nov 2026 as a tagged GitHub Release (HLX-80), with the README updated for it (HLX-84) |
 | M2 | Complete | Done: rate limiting (HLX-78) and the Flow 1 end-to-end test (HLX-79) completed the module |
-| M3 | Complete | Done for v0.1: the "This week" button and the highlighted current day (HLX-77), and demo data in the seed (HLX-82); the monthly view (FR-M3-06, Could) is not started |
-| M4 | Complete | Done for v0.1: database checks that keep a task's status and completion time consistent (HLX-83); the overdue label (FR-M4-09, Could) is not started |
+| M3 | Complete | Done: all Must requirements were done in Sprint 4 (see PMP-3). Sprint 5 added the "This week" button and the highlighted current day (HLX-77) and demo data in the seed (HLX-82); the monthly view (FR-M3-06, Could) is not started |
+| M4 | Complete | Done: all Must requirements were done in Sprint 4 (see PMP-3). Sprint 5 added database checks that keep a task's status and completion time consistent (HLX-83); the overdue label (FR-M4-09, Could) is not started |
 | M5 | In progress | Not started: moved to Sprint 6 (see below) |
 | M6 | In progress | Not started: moved to Sprint 6 (see below) |
 | M8 | In progress | Not started: moved to Sprint 6 (see below); the design of the AI module is already in the SDD |
 
-**Quality at this point:** 362 server tests, 294 client tests and 6 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 92.7% on the client. Before the release, the whole code base was reviewed for security, including requests that try to reach another user's data; no serious problem was found, and two minor findings are planned for Sprint 6. CodeQL and Dependabot report no open alerts.
+**Quality at this point:** 362 server tests, 294 client tests and 6 end-to-end tests run in CI on every pull request. Branch coverage is 95.2% on the server and 92.7% on the client. Before the release, the whole code base was reviewed for security, including requests that try to reach another user's data; no serious problem was found, and two minor findings are planned for Sprint 6 (HLX-86). CodeQL and Dependabot report no open alerts.
 
 **Changes to the plan (if any):**
 
