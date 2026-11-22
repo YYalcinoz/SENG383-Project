@@ -21,6 +21,8 @@ A web-based decision support platform that brings parents, specialists and child
 | M7 – Weekly statistics | Not started | |
 | M8 – Role-based AI summary | Not started | |
 
+The monthly view (FR-M3-06) and the "Overdue" label (FR-M4-09) are "Could" requirements and are not part of v0.1.
+
 ## Team
 
 | Name | Role | GitHub |
@@ -144,7 +146,7 @@ All accounts are synthetic and do not belong to real people. Every account uses 
 | Deniz Kaya | deniz@example.com | child | Child of Selin |
 | Burak Öztürk | burak@example.com | specialist | Linked to Deniz as a psychologist |
 
-**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks.
+**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks. Because the dates are counted from the day the seed runs, run npm run seed again on the day of the demo.
 
 For testing access control:
 
