@@ -101,6 +101,14 @@ npm test
 
 Add `:coverage` (`npm run test:coverage`) to also measure test coverage; the HTML report is written to `coverage/index.html` in the same folder. The tests fail if branch coverage drops below 60% (NFR-05).
 
+Linter (oxlint), in `server` or `client`:
+
+```bash
+npm run lint
+```
+
+The server linter also fails on warnings, so warnings never pile up.
+
 End-to-end tests (Playwright) start the backend and the frontend themselves and log in through a real browser:
 
 ```bash
@@ -114,7 +122,7 @@ They use their own database file (`e2e/.data/e2e.db`) and ports (3100 and 5180),
 
 The tests share one seeded database that is not reset between tests. A test that changes data must either undo its change or use data that no other test relies on; see the note in `e2e/playwright.config.js` for which seed accounts are free to change.
 
-In GitHub Actions, every pull request runs the server and client tests with coverage, the client linter, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
+In GitHub Actions, every pull request runs the server and client linters, the server and client tests with coverage, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
 
 ## Troubleshooting
 
