@@ -14,7 +14,7 @@ const app = express();
 app.get('/children/:childId/data', authenticate, requireChildAccess, (req, res) => {
   res.json({ child: req.child });
 });
-app.use((err, req, res, next) => res.status(500).json({ error: 'Internal server error' }));
+app.use((err, req, res, _next) => res.status(500).json({ error: 'Internal server error' }));
 
 const users = {};
 const tokenFor = (user) =>
@@ -157,7 +157,7 @@ describe('requireChildAccess: input and setup', () => {
     router.get('/data', authenticate, requireChildAccess, (req, res) => res.json({}));
     const mounted = express();
     mounted.use('/children/:childId', router);
-    mounted.use((err, req, res, next) => res.status(500).json({ error: err.message }));
+    mounted.use((err, req, res, _next) => res.status(500).json({ error: err.message }));
 
     const res = await request(mounted)
       .get(`/children/${users.childA.id}/data`)
