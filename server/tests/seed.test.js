@@ -183,11 +183,11 @@ describe('seed script', () => {
     test('done tasks have a done date and tasks to do do not', async () => {
       runSeed(dbPath);
 
-      const tasks = await query(dbPath, 'SELECT status, done_at FROM tasks');
-      tasks.forEach((t) => {
-        if (t.status === 'done') expect(t.done_at).not.toBeNull();
-        else expect(t.done_at).toBeNull();
-      });
+      const tasks = await query(dbPath, 'SELECT id, status, done_at FROM tasks');
+
+      expect(tasks.length).toBeGreaterThan(0);
+      expect(tasks.filter((t) => t.status === 'done' && t.done_at === null)).toEqual([]);
+      expect(tasks.filter((t) => t.status === 'todo' && t.done_at !== null)).toEqual([]);
     });
 
     test('Zeynep and Ali get no events or tasks', async () => {
