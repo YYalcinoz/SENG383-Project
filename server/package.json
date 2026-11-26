@@ -7,7 +7,8 @@
     "start": "node src/index.js",
     "test": "jest",
     "seed": "node scripts/seed.js",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "lint": "oxlint --deny-warnings"
   },
   "engines": {
     "node": ">=22"
@@ -22,10 +23,12 @@
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.3",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.5.0",
     "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "jest": "^30.5.2",
+    "oxlint": "^1.90.0",
     "supertest": "^7.3.1"
   },
   "jest": {

@@ -12,6 +12,7 @@ const TABLES = {
   specialists: 'specialist_links',
   schedule: 'calendar_events',
   entries: 'specialist_entries',
+  documents: 'documents',
 };
 
 afterAll((done) => {

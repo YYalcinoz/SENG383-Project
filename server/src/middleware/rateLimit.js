@@ -58,6 +58,15 @@ const linkSpecialistLimiter = createLimiter({
   message: 'Too many failed attempts to link a specialist, please try again in 15 minutes',
 });
 
+// Uploading a document (M6), per logged-in user (so it must run after authenticate).
+// Every upload is counted, successful or not: each one can store up to 10 MB on disk,
+// so this keeps one account from filling the disk.
+const uploadLimiter = createLimiter({
+  limit: 20,
+  keyGenerator: (req) => `user:${req.user.id}`,
+  message: 'Too many uploads, please try again in 15 minutes',
+});
+
 // For tests only; the server never calls it. A test file shares one app, so its
 // failed attempts add up across tests. A test file that does not test the limits
 // calls this in beforeEach, so a new test can never fail with an unexpected 429.
@@ -65,4 +74,4 @@ async function resetRateLimits() {
   await Promise.all(stores.map((store) => store.resetAll()));
 }
 
-module.exports = { apiLimiter, loginLimiter, linkSpecialistLimiter, resetRateLimits };
+module.exports = { apiLimiter, loginLimiter, linkSpecialistLimiter, uploadLimiter, resetRateLimits };

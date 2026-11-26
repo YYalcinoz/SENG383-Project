@@ -149,6 +149,7 @@ vite.config.ts.timestamp-*
 .turbo
 # Project
 *.db
+server/uploads/
 
 # E2E (Playwright)
 e2e/.data/

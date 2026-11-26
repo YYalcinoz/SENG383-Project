@@ -12,4 +12,10 @@ if (!process.env.JWT_SECRET && process.env.NODE_ENV !== 'test') {
   console.warn('JWT_SECRET is not set: using a random secret, so logins end when the server restarts.');
 }
 
-module.exports = { jwtSecret };
+// M6: uploaded documents are stored in this folder under random names (see
+// routes/documents.js). It is in .gitignore; tests point it to a temporary folder.
+const uploadDir = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.resolve(__dirname, '../uploads');
+
+module.exports = { jwtSecret, uploadDir };
