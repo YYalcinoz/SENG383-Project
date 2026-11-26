@@ -76,6 +76,21 @@ db.serialize(() => {
     done_at TEXT CHECK(done_at IS NULL OR datetime(done_at) IS done_at),
     CHECK((status = 'done') = (done_at IS NOT NULL))
   )`);
+
+  // M6: documents. The file itself is on disk under stored_name, a random name made by
+  // the server, so the name the user chose (original_name) is only shown, never used as
+  // a path. mime_type is the type found in the file's content, not the one the browser
+  // sent; the limits match routes/documents.js.
+  db.run(`CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id INTEGER NOT NULL REFERENCES users(id),
+    uploader_id INTEGER NOT NULL REFERENCES users(id),
+    original_name TEXT NOT NULL CHECK(length(original_name) BETWEEN 1 AND 255),
+    stored_name TEXT NOT NULL UNIQUE,
+    mime_type TEXT NOT NULL CHECK(mime_type IN ('application/pdf', 'image/png', 'image/jpeg')),
+    size_bytes INTEGER NOT NULL CHECK(size_bytes BETWEEN 1 AND 10485760),
+    uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
 
 module.exports = db;
