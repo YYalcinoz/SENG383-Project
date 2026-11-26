@@ -41,7 +41,7 @@ flowchart LR
 | M3 – Weekly schedule | Backend: `routes/schedule.js` (create, list), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, date, time and event type. Frontend: `SchedulePage` (parent and specialist), `MySchedulePage` (child) | FR-M3-01 … FR-M3-06 |
 | M4 – Tasks | Backend: `routes/tasks.js` (create, list, mark done), using `authenticate`, `requireRole` and `requireChildAccess`; input validation for title, development area and due date. Frontend: `TasksPage` (parent and specialist: task list and "assign task" form), `MyTasksPage` (child: own tasks and "mark as done") | FR-M4-01 … FR-M4-09 |
 | M5 – Specialist entries | Backend: `routes/entries.js` (create, list, edit), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; validation for date, entry type, area, title and text. Frontend: `EntriesPage` (parent and specialist) | FR-M5-01 … FR-M5-08 |
-| M6 – Documents | Backend: `routes/documents.js` (upload, list, download), multer (file type check and 10 MB limit), files stored in `server/uploads/`. Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
+| M6 – Documents | Backend: `routes/documents.js` (upload, list, download), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; multer receives one file of at most 10 MB, and the type is checked from the file's content; files stored in `server/uploads/` (`UPLOAD_DIR`). Frontend: `DocumentsPage` | FR-M6-01 … FR-M6-06 |
 | M7 – Weekly statistics | Backend: `routes/statistics.js` (weekly completion rate), `getWeekRange` from `utils/week.js` (shared with M8) to turn any date into its Monday–Sunday range, and one SQL query that counts tasks by status and `GROUP BY development_area`. Frontend: `StatisticsPage` (week selector, total rate, rate per area) | FR-M7-01 … FR-M7-06 |
 | M8 – Role-based AI summary | Backend: `routes/summary.js` (generate weekly summary), using `authenticate`, `requireRole` (blocks child) and `requireChildAccess`; calls the Gemini API only through the AI module in `server/src/ai/` (see [AI module](#ai-module-m8)), with role-based prompts and a mock mode for tests; uses `getWeekRange` from `utils/week.js` (shared with M7); stores "Helpful" / "Incorrect info" feedback in `ai_feedback`. Frontend: `SummaryPage` (summary, source links and feedback buttons) | FR-M8-01 … FR-M8-10 |
 
@@ -205,7 +205,7 @@ erDiagram
 
 - A child is a user with the role `child`; `parent_id` links the child to their parent. A parent can have more than one child, and each child has one parent.
 - `(child_id, specialist_id)` is unique in `specialist_links`, so a specialist cannot be linked to the same child twice. Unlinking deletes the row.
-- Uploaded files are stored on disk under a random name, so user-supplied file names are never used as paths.
+- Uploaded files are stored on disk under a random name (`crypto.randomUUID()`), readable only by the server's user, so user-supplied file names are never used as paths. Only PDF, PNG and JPEG files are accepted, and the type is decided by the first bytes of the file, not by its name or by the type the browser sends; `mime_type` stores the type found. The name shown to users keeps only the last part of the uploaded name, without control characters or Unicode direction marks, and always ends with an extension that matches the type. A download is always sent as an attachment with the stored type, `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'`, so a browser never runs an uploaded file as a page. Each user may upload 20 files per 15 minutes, so one account cannot fill the disk.
 - A task belongs to one child and was assigned by one user (the parent or a linked specialist). Every task starts with the status `todo`; only the child can change it to `done`.
 - `development_area` and `status` are text columns with a `CHECK` constraint, so only the allowed values can be stored.
 - The database also enforces that `done_at` is set exactly when `status` is `done`, and that it has the format of `CURRENT_TIMESTAMP` (`YYYY-MM-DD HH:MM:SS`, UTC). An existing database file keeps its old table; `npm run seed` rebuilds it with the current rules.
@@ -229,7 +229,7 @@ erDiagram
 | POST | `/api/children/:childId/specialists` | Link a specialist by email and type (parent only) | M2 |
 | DELETE | `/api/children/:childId/specialists/:specialistId` | Unlink a specialist (parent only) | M2 |
 | GET | `/api/children/:childId/documents` | List the child's documents | M6 |
-| POST | `/api/children/:childId/documents` | Upload a PDF or image (max 10 MB) | M6 |
+| POST | `/api/children/:childId/documents` | Upload a PDF, PNG or JPEG (max 10 MB), as `multipart/form-data` with one field named `file` | M6 |
 | GET | `/api/children/:childId/documents/:documentId/download` | Download a document | M6 |
 | GET | `/api/children/:childId/tasks` | List the child's tasks: the parent and linked specialists get all of the child's tasks, the child gets their own | M4 |
 | POST | `/api/children/:childId/tasks` | Assign a task with title, description, development area and due date (parent or linked specialist) | M4 |

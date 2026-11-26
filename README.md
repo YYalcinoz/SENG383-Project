@@ -83,7 +83,7 @@ npm run dev
 
 Open http://localhost:5173 in your browser. The login page should open. Log in with one of the [demo accounts](#demo-accounts) below (password `password123`). If the page says "Cannot reach the server", check that the backend in terminal 1 is running.
 
-**Login limit:** after 10 failed login attempts from the same IP address, login is blocked for 15 minutes; successful logins are not counted. The counters are kept in memory, so restarting the backend resets them. While you develop, all browsers on your machine share one IP address, so mistyped passwords of different users add up. Linking a specialist (20 failed attempts per parent) and the API as a whole (1000 requests per 15 minutes) have limits too.
+**Login limit:** after 10 failed login attempts from the same IP address, login is blocked for 15 minutes; successful logins are not counted. The counters are kept in memory, so restarting the backend resets them. While you develop, all browsers on your machine share one IP address, so mistyped passwords of different users add up. Linking a specialist (20 failed attempts per parent), uploading documents (20 uploads per user) and the API as a whole (1000 requests per IP address) have limits too, each per 15 minutes.
 
 ## Running the tests
 
@@ -171,6 +171,7 @@ Optional environment variables for the backend (copy `server/.env.example` to `s
 |---|---|---|
 | `PORT` | `3000` | Port of the backend server |
 | `DB_PATH` | `server/database.db` | Path of the SQLite database file |
+| `UPLOAD_DIR` | `server/uploads` | Folder where uploaded documents are stored |
 | `JWT_SECRET` | random on each start | Secret that signs login tokens; without it, users are logged out when the server restarts |
 
 ## Project structure
