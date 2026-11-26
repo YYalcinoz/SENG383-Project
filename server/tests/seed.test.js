@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const sqlite3 = require('sqlite3');
 const bcrypt = require('bcryptjs');
-const { addDays, getWeekRange } = require('../src/utils/week');
+const { addDays, getWeekRange, today } = require('../src/utils/week');
 
 const runSeed = (dbPath) =>
   execFileSync(process.execPath, [path.resolve(__dirname, '../scripts/seed.js')], {
@@ -205,6 +205,42 @@ describe('seed script', () => {
         { email: 'ali@example.com', events: 0, tasks: 0 },
         { email: 'zeynep@example.com', events: 0, tasks: 0 },
       ]);
+    });
+
+    test('adds specialist entries of all three types by Burak, in the last two weeks and never in the future', async () => {
+      runSeed(dbPath);
+
+      const entries = await query(
+        dbPath,
+        `SELECT e.entry_date, e.entry_type, e.is_edited, e.updated_at,
+                child.email AS child, author.email AS author
+         FROM specialist_entries e
+         JOIN users child ON child.id = e.child_id
+         JOIN users author ON author.id = e.author_id`
+      );
+      expect(entries.length).toBeGreaterThan(0);
+      entries.forEach((e) => {
+        expect(e.child).toBe('deniz@example.com');
+        expect(e.author).toBe('burak@example.com');
+        expect(e.entry_date >= addDays(today(), -13) && e.entry_date <= today()).toBe(true);
+      });
+      expect(new Set(entries.map((e) => e.entry_type))).toEqual(
+        new Set(['observation', 'session-note', 'evaluation'])
+      );
+      // One entry is edited, so the demo shows the "Edited" label
+      expect(entries.filter((e) => e.is_edited === 1 && e.updated_at !== null)).toHaveLength(1);
+    });
+
+    test('Zeynep and Ali get no specialist entries', async () => {
+      runSeed(dbPath);
+
+      const rows = await query(
+        dbPath,
+        `SELECT COUNT(*) AS count FROM specialist_entries e
+         JOIN users u ON u.id = e.child_id
+         WHERE u.email IN ('zeynep@example.com', 'ali@example.com')`
+      );
+      expect(rows).toEqual([{ count: 0 }]);
     });
   });
 });
