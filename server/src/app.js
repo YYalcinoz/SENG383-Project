@@ -24,7 +24,7 @@ app.use('/api/children/:childId/schedule', scheduleRoutes);
 app.use('/api/children/:childId/tasks', taskRoutes);
 
 // Tüm hatalar { error } biçiminde dönsün; 500'lerde iç detay sızmasın
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   const status = err.status || 500;
   if (status >= 500) console.error(err);
   res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
