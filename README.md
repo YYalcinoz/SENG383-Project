@@ -154,7 +154,7 @@ All accounts are synthetic and do not belong to real people. Every account uses 
 | Deniz Kaya | deniz@example.com | child | Child of Selin |
 | Burak Öztürk | burak@example.com | specialist | Linked to Deniz as a psychologist |
 
-**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks. Because the dates are counted from the day the seed runs, run npm run seed again on the day of the demo.
+**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks. Because the dates are counted from the day the seed runs, run `npm run seed` again on the day of the demo.
 
 For testing access control:
 
@@ -178,11 +178,20 @@ Optional environment variables for the backend (copy `server/.env.example` to `s
 
 ```
 client/                  React frontend (Vite)
+  src/pages/             One page per screen, with its tests
+  src/components/        Shared components (page layout, child list, module list, loading, week days)
+  src/auth/              Login state and protected routes
+  src/hooks/             Shared hooks (finding a child in the user's list)
+  src/utils/             Helpers for dates, tasks and events
 server/                  Express backend
-  src/app.js             Express app and routes
+  src/app.js             Express app: middleware, routers and the error handler
   src/index.js           Starts the server
-  src/db/database.js     SQLite connection and tables
-  scripts/seed.js        Creates synthetic sample data
+  src/config.js          Reads the settings from .env
+  src/routes/            One router per module (auth, children, specialists, schedule, tasks, documents)
+  src/middleware/        Login, role and child access checks; rate limits
+  src/utils/             Week and date helpers
+  src/db/                SQLite connection, tables and query helpers
+  scripts/               Seed data (seed.js) and database reset (resetDatabase.js)
   tests/                 Jest + Supertest tests
 e2e/                     Playwright end-to-end tests
 docs/                    SRS, SDD and PMP
