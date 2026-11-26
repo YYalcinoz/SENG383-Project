@@ -5,7 +5,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const db = require('../src/db/database');
 const { jwtSecret } = require('../src/config');
-const { all, get, run } = require('../src/db/helpers');
+const { get, run } = require('../src/db/helpers');
 
 const users = {};
 const tokenFor = (key) =>

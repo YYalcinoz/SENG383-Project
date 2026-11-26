@@ -83,7 +83,7 @@ npm run dev
 
 Open http://localhost:5173 in your browser. The login page should open. Log in with one of the [demo accounts](#demo-accounts) below (password `password123`). If the page says "Cannot reach the server", check that the backend in terminal 1 is running.
 
-**Login limit:** after 10 failed login attempts from the same IP address, login is blocked for 15 minutes; successful logins are not counted. The counters are kept in memory, so restarting the backend resets them. While you develop, all browsers on your machine share one IP address, so mistyped passwords of different users add up. Linking a specialist (20 failed attempts per parent) and the API as a whole (1000 requests per 15 minutes) have limits too.
+**Login limit:** after 10 failed login attempts from the same IP address, login is blocked for 15 minutes; successful logins are not counted. The counters are kept in memory, so restarting the backend resets them. While you develop, all browsers on your machine share one IP address, so mistyped passwords of different users add up. Linking a specialist (20 failed attempts per parent), uploading documents (20 uploads per user) and the API as a whole (1000 requests per IP address) have limits too, each per 15 minutes.
 
 ## Running the tests
 
@@ -101,6 +101,14 @@ npm test
 
 Add `:coverage` (`npm run test:coverage`) to also measure test coverage; the HTML report is written to `coverage/index.html` in the same folder. The tests fail if branch coverage drops below 60% (NFR-05).
 
+Linter (oxlint), in `server` or `client`:
+
+```bash
+npm run lint
+```
+
+The server linter also fails on warnings, so warnings never pile up.
+
 End-to-end tests (Playwright) start the backend and the frontend themselves and log in through a real browser:
 
 ```bash
@@ -114,7 +122,7 @@ They use their own database file (`e2e/.data/e2e.db`) and ports (3100 and 5180),
 
 The tests share one seeded database that is not reset between tests. A test that changes data must either undo its change or use data that no other test relies on; see the note in `e2e/playwright.config.js` for which seed accounts are free to change.
 
-In GitHub Actions, every pull request runs the server and client tests with coverage, the client linter, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
+In GitHub Actions, every pull request runs the server and client linters, the server and client tests with coverage, a production build of the frontend and the end-to-end tests. The coverage table appears in the summary of the CI run, and the HTML reports can be downloaded from the run's artifacts.
 
 ## Troubleshooting
 
@@ -163,6 +171,7 @@ Optional environment variables for the backend (copy `server/.env.example` to `s
 |---|---|---|
 | `PORT` | `3000` | Port of the backend server |
 | `DB_PATH` | `server/database.db` | Path of the SQLite database file |
+| `UPLOAD_DIR` | `server/uploads` | Folder where uploaded documents are stored |
 | `JWT_SECRET` | random on each start | Secret that signs login tokens; without it, users are logged out when the server restarts |
 
 ## Project structure

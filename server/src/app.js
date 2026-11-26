@@ -4,6 +4,7 @@ const childrenRoutes = require('./routes/children');
 const specialistRoutes = require('./routes/specialists');
 const taskRoutes = require('./routes/tasks');
 const scheduleRoutes = require('./routes/schedule');
+const documentRoutes = require('./routes/documents');
 const { apiLimiter } = require('./middleware/rateLimit');
 
 const app = express();
@@ -22,9 +23,10 @@ app.use('/api/children', childrenRoutes);
 app.use('/api/children/:childId/specialists', specialistRoutes);
 app.use('/api/children/:childId/schedule', scheduleRoutes);
 app.use('/api/children/:childId/tasks', taskRoutes);
+app.use('/api/children/:childId/documents', documentRoutes);
 
 // Tüm hatalar { error } biçiminde dönsün; 500'lerde iç detay sızmasın
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   const status = err.status || 500;
   if (status >= 500) console.error(err);
   res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
