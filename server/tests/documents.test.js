@@ -218,6 +218,9 @@ describe('file names', () => {
     ['no extension', 'report', 'report.pdf'],
     ['an upper-case extension', 'REPORT.PDF', 'REPORT.PDF'],
     ['spaces around the name', '   report.pdf  ', 'report.pdf'],
+    ['only an extension', '.pdf', 'document.pdf'],
+    ['a hidden-file name', '.hidden.pdf', 'hidden.pdf'],
+    ['several leading dots', '...report.pdf', 'report.pdf'],
   ])('%s: "%s" is shown as "%s"', async (_, filename, shown) => {
     const res = await upload('ParentA', 'ChildA', PDF, filename);
 
@@ -247,6 +250,22 @@ describe('file names', () => {
     const res = await upload('ParentA', 'ChildA', PNG, String.fromCharCode(0x202e, 0x2066));
 
     expect(res.body.document.name).toBe('document.png');
+  });
+
+  test('shortening counts characters, so an emoji at the cut is never split in half', async () => {
+    const emoji = String.fromCodePoint(0x1f600);
+    const filename = `${'a'.repeat(249)}${emoji.repeat(5)}.pdf`;
+
+    const res = await upload('ParentA', 'ChildA', PDF, filename);
+
+    expect(res.status).toBe(201);
+    const shown = res.body.document.name;
+    expect(Array.from(shown)).toHaveLength(255);
+    expect(shown).toBe(`${'a'.repeat(249)}${emoji.repeat(2)}.pdf`);
+    // No half of a character (a lone surrogate) anywhere in the name
+    expect(shown.isWellFormed()).toBe(true);
+    const row = await get('SELECT original_name FROM documents WHERE id = ?', [res.body.document.id]);
+    expect(row.original_name).toBe(shown);
   });
 
   test('a long name is shortened to 255 characters and keeps its extension', async () => {

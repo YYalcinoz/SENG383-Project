@@ -41,20 +41,25 @@ const UNSAFE_CHARACTERS = /[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\
 
 // The name shown in the list and offered when downloading. Only the last part of a path
 // is kept, and the extension always matches the type found in the content, so a PNG
-// uploaded as "photo.exe" is offered as "photo.exe.png".
+// uploaded as "photo.exe" is offered as "photo.exe.png". Leading dots are removed, so a
+// downloaded file is never hidden (".pdf" becomes "document.pdf"). Lengths are counted
+// in characters, like SQLite does, so shortening never cuts an emoji in half.
 function displayName(originalName, type) {
-  let name = String(originalName ?? '')
+  const name = String(originalName ?? '')
     .split(/[\\/]/)
     .pop()
     .replace(UNSAFE_CHARACTERS, '')
     .trim();
-  if (!name) name = 'document';
-  if (!type.extensions.includes(path.extname(name).toLowerCase())) name += type.extensions[0];
-  if (name.length > NAME_MAX) {
-    const extension = path.extname(name);
-    name = name.slice(0, NAME_MAX - extension.length) + extension;
+  // The uploaded extension is kept, in its own case, when it matches the type
+  const matched = type.extensions.find((ext) => name.toLowerCase().endsWith(ext));
+  const extension = matched ? name.slice(-matched.length) : type.extensions[0];
+  let stem = (matched ? name.slice(0, -matched.length) : name).replace(/^[.\s]+/, '');
+  if (!stem) stem = 'document';
+  const characters = Array.from(stem);
+  if (characters.length + extension.length > NAME_MAX) {
+    stem = characters.slice(0, NAME_MAX - extension.length).join('');
   }
-  return name;
+  return stem + extension;
 }
 
 // The file is kept in memory until its type is checked, so a rejected file never
