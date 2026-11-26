@@ -24,6 +24,7 @@ test('every IP can make 1000 API requests in 15 minutes; the next one gets 429',
   expect(res.status).toBe(429);
   expect(res.headers['content-type']).toMatch(/application\/json/);
   expect(res.headers['x-content-type-options']).toBe('nosniff');
+  expect(res.headers['cache-control']).toBe('no-store');
   expect(res.body).toEqual({ error: 'Too many requests, please try again later' });
   expect(res.headers['ratelimit-policy']).toMatch(/q=1000;.*w=900/);
 });

@@ -10,10 +10,16 @@ const { apiLimiter } = require('./middleware/rateLimit');
 const app = express();
 // Do not tell clients which framework the server runs on
 app.disable('x-powered-by');
-// Browsers must use the Content-Type the server sends and never guess another one,
-// so text from a request that appears in a response can never run as HTML
+// Responses are never cached (no-store below), so an ETag has no use
+app.set('etag', false);
+// Headers for every response:
+// - nosniff: browsers must use the Content-Type the server sends and never guess
+//   another one, so text from a request that appears in a response can never run as HTML
+// - no-store: responses hold a child's data and a family often shares one computer,
+//   so the browser must not keep them in its cache after the user logs out
+//   (the document download sets its own value)
 app.use((req, res, next) => {
-  res.set('X-Content-Type-Options', 'nosniff');
+  res.set({ 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
   next();
 });
 

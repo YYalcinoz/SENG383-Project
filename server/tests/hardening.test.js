@@ -62,6 +62,40 @@ describe('X-Content-Type-Options header', () => {
   });
 });
 
+describe('Cache-Control header', () => {
+  // Responses hold a child's data and a family often shares one computer, so the
+  // browser must not keep them in its cache
+  test.each([
+    ['a successful request', () => request(app).get('/api/health'), 200],
+    [
+      "a request for a child's data",
+      () => request(app).get('/api/children').set('Authorization', `Bearer ${parentToken()}`),
+      200,
+    ],
+    ['a request without a token', () => request(app).get('/api/auth/me'), 401],
+    ['an unknown route', () => request(app).get('/api/unknown'), 404],
+  ])('is no-store on %s', async (_name, send, status) => {
+    const res = await send();
+
+    expect(res.status).toBe(status);
+    expect(res.headers['cache-control']).toBe('no-store');
+  });
+
+  test('no ETag is sent, so a request is never answered with 304', async () => {
+    // With no-store the browser keeps nothing to check against, so an ETag has no use;
+    // without one, Express always sends the full response
+    const first = await request(app).get('/api/children').set('Authorization', `Bearer ${parentToken()}`);
+    const second = await request(app)
+      .get('/api/children')
+      .set('Authorization', `Bearer ${parentToken()}`)
+      .set('If-None-Match', 'W/"any"');
+
+    expect(first.headers.etag).toBeUndefined();
+    expect(second.status).toBe(200);
+    expect(second.body).toEqual(first.body);
+  });
+});
+
 describe('unknown routes', () => {
   // Express's default answer is an HTML page ("Cannot GET /api/...") that names the
   // method and path; every answer of the API should be JSON in the { error } format
