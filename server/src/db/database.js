@@ -76,6 +76,28 @@ db.serialize(() => {
     done_at TEXT CHECK(done_at IS NULL OR datetime(done_at) IS done_at),
     CHECK((status = 'done') = (done_at IS NOT NULL))
   )`);
+
+  // M5: uzman girişleri. entry_date gözlemin tarihidir (uzman seçer) ve diğer tarihler gibi
+  // YYYY-MM-DD olarak saklanır; M8 haftanın girişlerini bu sütunla seçer. created_at girişin
+  // kaydedildiği zamandır. is_edited ve updated_at birlikte değişir: düzenlenmemiş bir
+  // girişte 0 ve boş, düzenlenmiş bir girişte 1 ve dolu (FR-M5-05, son CHECK); updated_at,
+  // CURRENT_TIMESTAMP ile aynı biçimde (UTC). development_area, tasks ile aynı listedir.
+  db.run(`CREATE TABLE IF NOT EXISTS specialist_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id INTEGER NOT NULL REFERENCES users(id),
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    entry_date TEXT NOT NULL CHECK(date(entry_date) IS entry_date),
+    entry_type TEXT NOT NULL CHECK(entry_type IN ('observation', 'session-note', 'evaluation')),
+    development_area TEXT NOT NULL CHECK(development_area IN (
+      'motor', 'language', 'cognitive', 'social-emotional', 'self-care'
+    )),
+    title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+    observation_text TEXT NOT NULL CHECK(length(trim(observation_text)) > 0),
+    is_edited INTEGER NOT NULL DEFAULT 0 CHECK(is_edited IN (0, 1)),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT CHECK(updated_at IS NULL OR datetime(updated_at) IS updated_at),
+    CHECK((is_edited = 1) = (updated_at IS NOT NULL))
+  )`);
 });
 
 module.exports = db;

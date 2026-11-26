@@ -7,7 +7,12 @@ const { jwtSecret } = require('../src/config');
 const { run } = require('../src/db/helpers');
 
 // Each module's table, dropped to make its router fail with a database error
-const TABLES = { tasks: 'tasks', specialists: 'specialist_links', schedule: 'calendar_events' };
+const TABLES = {
+  tasks: 'tasks',
+  specialists: 'specialist_links',
+  schedule: 'calendar_events',
+  entries: 'specialist_entries',
+};
 
 afterAll((done) => {
   jest.restoreAllMocks();

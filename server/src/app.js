@@ -4,6 +4,7 @@ const childrenRoutes = require('./routes/children');
 const specialistRoutes = require('./routes/specialists');
 const taskRoutes = require('./routes/tasks');
 const scheduleRoutes = require('./routes/schedule');
+const entryRoutes = require('./routes/entries');
 const { apiLimiter } = require('./middleware/rateLimit');
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/children', childrenRoutes);
 app.use('/api/children/:childId/specialists', specialistRoutes);
 app.use('/api/children/:childId/schedule', scheduleRoutes);
 app.use('/api/children/:childId/tasks', taskRoutes);
+app.use('/api/children/:childId/entries', entryRoutes);
 
 // Tüm hatalar { error } biçiminde dönsün; 500'lerde iç detay sızmasın
 app.use((err, req, res, next) => {
