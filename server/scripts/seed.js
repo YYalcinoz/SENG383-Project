@@ -14,7 +14,7 @@ if (!resetDatabase(dbPath)) {
 
 const db = require('../src/db/database');
 const { run } = require('../src/db/helpers');
-const { addDays, getWeekRange } = require('../src/utils/week');
+const { addDays, getWeekRange, today } = require('../src/utils/week');
 
 // Sadece sentetik demo hesapları için
 const passwordHash = bcrypt.hashSync('password123', 10);
@@ -105,6 +105,51 @@ const demoTasks = [
   { day: 10, title: 'Help to set the table for dinner', description: '', area: 'self-care', by: SELIN, done: false },
 ];
 
+// Burak'ın Deniz hakkındaki girişleri (M5). Tarihler seed'in çalıştığı güne göredir (daysAgo:
+// kaç gün önce), çünkü bir giriş olmuş bir şeyi kaydeder ve API gelecek tarihi kabul etmez.
+// Biri bugüne düşer, böylece seed hangi gün çalışırsa çalışsın bu haftada en az bir giriş olur (M8 özeti için).
+// edited: true olan giriş, sayfadaki "Edited" etiketini göstermek için düzenlenmiş sayılır.
+const demoEntries = [
+  {
+    daysAgo: 0,
+    type: 'session-note',
+    area: 'social-emotional',
+    title: 'Naming feelings',
+    text:
+      'We played a game with feeling cards. Deniz named happy, sad and angry without help.\n' +
+      'He found "worried" hard to describe. We will practise it again next session.',
+  },
+  {
+    daysAgo: 2,
+    type: 'observation',
+    area: 'language',
+    title: 'Retelling a story',
+    text: 'Deniz retold a short picture book in the right order, using full sentences.',
+  },
+  {
+    daysAgo: 5,
+    type: 'observation',
+    area: 'motor',
+    title: 'Ball games in the garden',
+    text: 'He caught a large ball with both hands most of the time; catching a small ball is still difficult.',
+  },
+  {
+    daysAgo: 8,
+    type: 'evaluation',
+    area: 'cognitive',
+    title: 'Sorting and matching',
+    text: 'Deniz sorted blocks by colour and by size. Sorting by two rules at once is the next step.',
+    edited: true,
+  },
+  {
+    daysAgo: 12,
+    type: 'session-note',
+    area: 'self-care',
+    title: 'Morning routine plan',
+    text: 'We made a picture plan for the morning routine with Selin: wash, dress, breakfast, pack the bag.',
+  },
+];
+
 async function insertUser(user, role, parentId = null) {
   const { lastID } = await run(
     'INSERT INTO users (name, email, password_hash, role, parent_id) VALUES (?, ?, ?, ?, ?)',
@@ -168,6 +213,20 @@ async function seedDemoData(ids) {
     }
   }
   console.log(`Added ${demoTasks.length} tasks for Deniz Kaya`);
+
+  for (const entry of demoEntries) {
+    const { lastID } = await run(
+      `INSERT INTO specialist_entries
+        (child_id, author_id, entry_date, entry_type, development_area, title, observation_text)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [childId, ids[BURAK], addDays(today(), -entry.daysAgo), entry.type, entry.area, entry.title, entry.text]
+    );
+    if (entry.edited) {
+      // API'deki PATCH ile aynı: is_edited ve updated_at birlikte değişir
+      await run('UPDATE specialist_entries SET is_edited = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [lastID]);
+    }
+  }
+  console.log(`Added ${demoEntries.length} specialist entries for Deniz Kaya`);
 }
 
 console.log('Seed process started...');

@@ -154,7 +154,7 @@ All accounts are synthetic and do not belong to real people. Every account uses 
 | Deniz Kaya | deniz@example.com | child | Child of Selin |
 | Burak Öztürk | burak@example.com | specialist | Linked to Deniz as a psychologist |
 
-**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done. The other accounts have no events or tasks. Because the dates are counted from the day the seed runs, run `npm run seed` again on the day of the demo.
+**For a demo**, log in as Selin, Deniz or Burak: Deniz has events and tasks this week and next week, some of them done, and Burak has written specialist entries about Deniz in the last two weeks, one of them edited. The other accounts have no events, tasks or entries. Because the dates are counted from the day the seed runs, run `npm run seed` again on the day of the demo.
 
 For testing access control:
 
