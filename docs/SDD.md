@@ -243,6 +243,8 @@ erDiagram
 | GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week; defaults to the current week (parent and linked specialist only) | M8 |
 | POST | `/api/children/:childId/summary/feedback` | Rate the week's summary as helpful or incorrect, with `weekStart` and `rating`; replaces the user's earlier rating for that week (parent and linked specialist only) | M8 |
 
+Every error answer of the server is JSON (only a document download returns the file itself): a route that does not exist returns `404 { "error": "Not found" }` instead of Express's HTML page, and a 500 returns `{ "error": "Internal server error" }` without internal details. The `X-Powered-By` header is not sent, so a response does not tell which framework the server runs on. Every response has `X-Content-Type-Options: nosniff`, so browsers use the Content-Type the server sends and never read a response as HTML, and `Cache-Control: no-store`, so a child's data is not kept in the browser cache of a computer the family shares (a document download uses `private, no-store`). Because nothing is cached, the API sends no `ETag`.
+
 ### Authentication API format
 
 All errors use the format `{ "error": "message" }`.
@@ -560,4 +562,5 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-13 | Tasks API format added | Kerem Alp Ustaoğlu |
 | 2026-11-13 | Calendar events API format added | Zeynep Dila Tetik |
 | 2026-11-22 | Status checks of the tasks table described | Kerem Alp Ustaoğlu |
+| 2026-11-26 | JSON answers for unknown routes, no `X-Powered-By` header, `nosniff` and `no-store` on every response | Yağız Yalçınöz |
 | 2026-11-26 | Specialist entries API format and edit rules added | Zeynep Dila Tetik |
