@@ -11,6 +11,7 @@ const TABLES = {
   tasks: 'tasks',
   specialists: 'specialist_links',
   schedule: 'calendar_events',
+  entries: 'specialist_entries',
   documents: 'documents',
 };
 
