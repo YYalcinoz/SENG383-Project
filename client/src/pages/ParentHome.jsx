@@ -6,7 +6,7 @@ const MODULES = [
   { label: 'Specialists', slug: 'specialists' },
   { label: 'Tasks', slug: 'tasks' },
   { label: 'Schedule', slug: 'schedule' },
-  { label: 'Entries' },
+  { label: 'Entries', slug: 'entries' },
   { label: 'Documents' },
   { label: 'Statistics' },
   { label: 'AI summary' },
