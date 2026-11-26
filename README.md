@@ -187,7 +187,7 @@ server/                  Express backend
   src/app.js             Express app: middleware, routers and the error handler
   src/index.js           Starts the server
   src/config.js          Reads the settings from .env
-  src/routes/            One router per module (auth, children, specialists, schedule, tasks, documents)
+  src/routes/            One router per module (auth, children, specialists, schedule, tasks, entries, documents)
   src/middleware/        Login, role and child access checks; rate limits
   src/utils/             Week and date helpers
   src/db/                SQLite connection, tables and query helpers

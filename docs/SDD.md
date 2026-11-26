@@ -211,7 +211,7 @@ erDiagram
 - The database also enforces that `done_at` is set exactly when `status` is `done`, and that it has the format of `CURRENT_TIMESTAMP` (`YYYY-MM-DD HH:MM:SS`, UTC). An existing database file keeps its old table; `npm run seed` rebuilds it with the current rules.
 - M7 has no table of its own: weekly statistics are calculated from `tasks` on every request, using `due_date` for the week and `status` for done tasks.
 - `CALENDAR_EVENTS` belong to a child and are created by the parent or a linked specialist. FR-M3-01 asks for one time, so `start_time` is required and `end_time` is optional; when it is given, it must be after `start_time`. Dates are stored as `YYYY-MM-DD` and times as `HH:MM`, and `CHECK` constraints reject any other format, because the weekly view and M8 compare dates as text (`event_date BETWEEN ...`), which only works when every date has the same format.
-- `SPECIALIST_ENTRIES` store observations made by linked specialists. `entry_date` is the date of the observation, entered by the specialist (FR-M5-01); it can differ from `created_at`, which is when the entry was saved. The `is_edited` flag is set to true if the entry is updated after creation.
+- `SPECIALIST_ENTRIES` store observations made by linked specialists. `entry_date` is the date of the observation, entered by the specialist (FR-M5-01); it can differ from `created_at`, which is when the entry was saved. When the author changes an entry, `is_edited` becomes true and `updated_at` is set; the database enforces that the two always change together (`updated_at` is set exactly when `is_edited` is true). `entry_type` and `development_area` are text columns with a `CHECK` constraint; the development areas are the same as for tasks.
 - A week runs from Monday to Sunday. To decide which records belong to a week, tasks use `due_date`, calendar events use `event_date` and specialist entries use `entry_date`, so M7 and M8 use the same definition of a week. Both use one helper, `getWeekRange(date)` in `server/src/utils/week.js`, which returns the Monday and Sunday of the week that contains the given date.
 - M8 summaries are not stored; they are generated on demand from the tasks, calendar events and specialist entries of the selected week. Only feedback is stored, in `AI_FEEDBACK` (FR-M8-06).
 - In `AI_FEEDBACK`, `child_id` is the child the summary is about and `user_id` is the parent or linked specialist who rated it; the child never sees summaries (FR-M8-08), so a child cannot give feedback. `(child_id, user_id, week_start)` is unique, so each user gives one rating per child and week; rating again replaces the earlier rating. `rating` is a text column with a `CHECK` constraint (`helpful` or `incorrect`). The summary text itself is not stored: it would come from the client, so the server could not check that it is the real summary, and it would keep a copy of the child's data outside the source records.
@@ -239,7 +239,7 @@ erDiagram
 | POST | `/api/children/:childId/schedule` | Add a calendar event (parent or linked specialist) | M3 |
 | GET | `/api/children/:childId/entries` | List specialist entries for the child (parent and linked specialist only) | M5 |
 | POST | `/api/children/:childId/entries` | Add a specialist entry (linked specialist only) | M5 |
-| PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (marks as edited) | M5 |
+| PATCH | `/api/children/:childId/entries/:entryId` | Edit a specialist entry (only its author; marks as edited) | M5 |
 | GET | `/api/children/:childId/summary/weekly?weekStart=YYYY-MM-DD` | Generate role-based AI summary for the week; defaults to the current week (parent and linked specialist only) | M8 |
 | POST | `/api/children/:childId/summary/feedback` | Rate the week's summary as helpful or incorrect, with `weekStart` and `rating`; replaces the user's earlier rating for that week (parent and linked specialist only) | M8 |
 
@@ -402,6 +402,41 @@ Request: `{ "title": "...", "eventDate": "2026-11-18", "startTime": "16:00", "en
 | 400 (missing field, FR-M3-02) | `{ "error": "Title is required" }`, `{ "error": "Date is required" }` or `{ "error": "Start time is required" }` |
 | 400 (invalid field) | `{ "error": "Title must be at most 200 characters" }`, `{ "error": "Date must be a valid date in YYYY-MM-DD format" }`, `{ "error": "Start time must be a time in HH:MM format" }`, `{ "error": "End time must be a time in HH:MM format" }`, `{ "error": "End time must be after the start time" }` or `{ "error": "Event type must be one of: school, support, health, sports, other" }` |
 
+### Specialist entries API format
+
+All endpoints need `Authorization: Bearer <token>`. Access errors (401, 403, invalid child id) follow the table in Section 2. A child gets 403 on every endpoint (FR-M5-06). `entryDate` is a plain date (`YYYY-MM-DD`), `createdAt` and `updatedAt` are ISO 8601 UTC, `updatedAt` is `null` until the entry is edited, `entryType` is one of `observation`, `session-note`, `evaluation`, and `developmentArea` is one of `motor`, `language`, `cognitive`, `social-emotional`, `self-care`. An entry looks like this:
+
+`{ "id": 3, "entryDate": "2026-11-24", "entryType": "observation", "developmentArea": "language", "title": "Reading aloud", "observationText": "Read a short story aloud without help.", "authorName": "Burak Öztürk", "isEdited": false, "isOwn": true, "createdAt": "2026-11-24T10:00:00Z", "updatedAt": null }`
+
+`isOwn` is true when the user who asks wrote the entry, so the page can offer "Edit" only there; the author's id and email address are not returned.
+
+**GET `/api/children/:childId/entries`** (the child's parent and linked specialists)
+
+| Status | Response |
+|---|---|
+| 200 | `{ "entries": [ ... ] }`, all of the child's entries, the newest `entryDate` first (entries of the same date: the later saved first); `"entries": []` when there are none |
+
+**POST `/api/children/:childId/entries`** (a linked specialist; the parent and the child get 403)
+
+Request: `{ "entryDate": "2026-11-24", "entryType": "observation", "developmentArea": "language", "title": "...", "observationText": "..." }`. The title (at most 200 characters, the same limit as tasks and events) and the text (at most 5000 characters) are trimmed. The date cannot be after today, because an entry records something that already happened; "today" is the server's local date, as in the calendar events API. The author is taken from the token and the child from the URL; any other fields in the body are ignored.
+
+| Status | Response |
+|---|---|
+| 201 | `{ "entry": { ... } }` |
+| 400 (missing field, FR-M5-02) | `{ "error": "Date is required" }`, `{ "error": "Title is required" }` or `{ "error": "Text is required" }` |
+| 400 (invalid field) | `{ "error": "Date must be a valid date in YYYY-MM-DD format" }`, `{ "error": "Date cannot be in the future" }`, `{ "error": "Entry type must be one of: observation, session-note, evaluation" }`, `{ "error": "Development area must be one of: ..." }`, `{ "error": "Title must be at most 200 characters" }` or `{ "error": "Text must be at most 5000 characters" }` |
+
+**PATCH `/api/children/:childId/entries/:entryId`** (only the specialist who wrote the entry, while they are linked to the child)
+
+Request: the same five fields as POST, all required, with the same rules. If at least one field changes, the entry is saved with `isEdited: true` and a new `updatedAt` (FR-M5-05); saving without a change leaves it as it was. A specialist who was unlinked can no longer edit their old entries, which stay visible to the parent and the other specialists.
+
+| Status | Response |
+|---|---|
+| 200 | `{ "entry": { ... } }` |
+| 400 | `{ "error": "Invalid entry id" }`, or one of the POST messages above |
+| 403 | `{ "error": "You can only edit your own entries" }` for another specialist's entry of the same child |
+| 404 | `{ "error": "Entry not found" }`, for an entry that does not exist and for another child's entry alike |
+
 ---
 
 ## 5. Critical Flows
@@ -525,3 +560,4 @@ The images are wireframes of the planned screens; the login and role home screen
 | 2026-11-13 | Tasks API format added | Kerem Alp Ustaoğlu |
 | 2026-11-13 | Calendar events API format added | Zeynep Dila Tetik |
 | 2026-11-22 | Status checks of the tasks table described | Kerem Alp Ustaoğlu |
+| 2026-11-26 | Specialist entries API format and edit rules added | Zeynep Dila Tetik |
