@@ -17,7 +17,7 @@ A web-based decision support platform that brings parents, specialists and child
 | M3 – Weekly schedule | Ready | Parents and linked specialists see a child's week and add events. A child sees their own schedule. |
 | M4 – Tasks | Ready | Parents and linked specialists assign tasks and see their status. A child sees their own tasks and marks them as done. |
 | M5 – Specialist entries | Not started | |
-| M6 – Documents | Not started | |
+| M6 – Documents | Ready | Parents and linked specialists upload PDF, PNG and JPEG files (at most 10 MB) for a child, see who uploaded each one and when, and open or download them. A child does not see documents. |
 | M7 – Weekly statistics | Not started | |
 | M8 – Role-based AI summary | Not started | |
 
@@ -107,7 +107,7 @@ Linter (oxlint), in `server` or `client`:
 npm run lint
 ```
 
-The server linter also fails on warnings, so warnings never pile up.
+Both linters also fail on warnings, so warnings never pile up.
 
 End-to-end tests (Playwright) start the backend and the frontend themselves and log in through a real browser:
 
@@ -182,7 +182,7 @@ client/                  React frontend (Vite)
   src/components/        Shared components (page layout, child list, module list, loading, week days)
   src/auth/              Login state and protected routes
   src/hooks/             Shared hooks (finding a child in the user's list)
-  src/utils/             Helpers for dates, tasks and events
+  src/utils/             Helpers for dates, tasks, events, entries and documents
 server/                  Express backend
   src/app.js             Express app: middleware, routers and the error handler
   src/index.js           Starts the server

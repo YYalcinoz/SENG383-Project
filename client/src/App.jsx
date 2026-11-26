@@ -4,6 +4,7 @@ import RedirectIfAuthenticated from './auth/RedirectIfAuthenticated.jsx'
 import RootRedirect from './auth/RootRedirect.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import ChildHome from './pages/ChildHome.jsx'
+import DocumentsPage from './pages/DocumentsPage.jsx'
 import EntriesPage from './pages/EntriesPage.jsx'
 import LinkedSpecialistsPage from './pages/LinkedSpecialistsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/parent/children/:childId/schedule" element={<SchedulePage />} />
         <Route path="/parent/children/:childId/tasks" element={<TasksPage />} />
         <Route path="/parent/children/:childId/entries" element={<EntriesPage />} />
+        <Route path="/parent/children/:childId/documents" element={<DocumentsPage />} />
       </Route>
 
       <Route
@@ -55,6 +57,7 @@ export default function App() {
         <Route path="/specialist/children/:childId/schedule" element={<SchedulePage />} />
         <Route path="/specialist/children/:childId/tasks" element={<TasksPage />} />
         <Route path="/specialist/children/:childId/entries" element={<EntriesPage />} />
+        <Route path="/specialist/children/:childId/documents" element={<DocumentsPage />} />
       </Route>
 
       <Route

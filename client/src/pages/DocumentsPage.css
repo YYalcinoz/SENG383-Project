@@ -1,0 +1,83 @@
+.documents-page {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  padding: 0 16px 32px;
+}
+
+.documents-page section {
+  width: 100%;
+  max-width: 640px;
+  text-align: left;
+}
+
+.documents-page h3 {
+  margin: 0 0 8px;
+  color: var(--text-h);
+}
+
+.document-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.document-item {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+/* A long file name without spaces wraps instead of widening the page */
+.document-name {
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.document-meta {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.document-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.upload-form {
+  display: grid;
+  gap: 16px;
+}
+
+.upload-form .form-field {
+  display: grid;
+  gap: 4px;
+}
+
+.upload-form .form-field label {
+  color: var(--text-h);
+}
+
+.documents-page button {
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.documents-page button:disabled {
+  cursor: not-allowed;
+}
+
+.documents-page .notice:empty {
+  display: none;
+}
+
+.documents-page .form-error {
+  margin: 0;
+  color: var(--error);
+}
