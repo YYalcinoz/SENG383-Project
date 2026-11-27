@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest'
-import { ApiError, apiFetch, getToken, setToken, setUnauthorizedHandler } from './api.js'
+import { ApiError, apiFetch, apiFetchBlob, apiUpload, getToken, setToken, setUnauthorizedHandler } from './api.js'
 
 const jsonResponse = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -86,4 +86,69 @@ test('treats a non-JSON server error as an unreachable backend', async () => {
   vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('proxy error', { status: 500 }))
 
   await expect(apiFetch('/api/health')).rejects.toMatchObject({ message: 'Cannot reach the server', status: 500 })
+})
+
+test('apiUpload sends the file as form data in the field "file", with the token and without a Content-Type', async () => {
+  setToken('abc')
+  const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ document: { id: 1 } }, 201))
+  const file = new File(['%PDF-1.4'], 'report.pdf', { type: 'application/pdf' })
+
+  const result = await apiUpload('/api/children/2/documents', file)
+
+  const [path, options] = fetchSpy.mock.calls[0]
+  expect(path).toBe('/api/children/2/documents')
+  expect(options.method).toBe('POST')
+  expect(options.headers.Authorization).toBe('Bearer abc')
+  // The browser sets multipart/form-data with the boundary itself
+  expect(options.headers['Content-Type']).toBeUndefined()
+  expect(options.body).toBeInstanceOf(FormData)
+  expect([...options.body.keys()]).toEqual(['file'])
+  expect(options.body.get('file').name).toBe('report.pdf')
+  expect(result).toEqual({ document: { id: 1 } })
+})
+
+test('apiUpload throws an ApiError with the backend message', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ error: 'Only PDF, PNG and JPEG files can be uploaded' }, 400))
+
+  const error = await apiUpload('/api/children/2/documents', new File(['x'], 'a.txt')).catch((e) => e)
+
+  expect(error).toBeInstanceOf(ApiError)
+  expect(error).toMatchObject({ message: 'Only PDF, PNG and JPEG files can be uploaded', status: 400 })
+})
+
+test('apiFetchBlob returns the file with the token sent', async () => {
+  setToken('abc')
+  const fetchSpy = vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(new Response('%PDF-1.4', { headers: { 'Content-Type': 'application/pdf' } }))
+
+  const blob = await apiFetchBlob('/api/children/2/documents/1/download')
+
+  const [path, options] = fetchSpy.mock.calls[0]
+  expect(path).toBe('/api/children/2/documents/1/download')
+  expect(options.method).toBe('GET')
+  expect(options.headers.Authorization).toBe('Bearer abc')
+  // (jsdom and fetch have their own Blob classes, so the content is checked instead of the class)
+  expect(await blob.text()).toBe('%PDF-1.4')
+})
+
+test('apiFetchBlob ends the session on 401 like every other request', async () => {
+  setToken('expired')
+  const handler = vi.fn()
+  setUnauthorizedHandler(handler)
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ error: 'Invalid or expired token' }, 401))
+
+  await expect(apiFetchBlob('/api/children/2/documents/1/download')).rejects.toMatchObject({ status: 401 })
+
+  expect(getToken()).toBeNull()
+  expect(handler).toHaveBeenCalledTimes(1)
+})
+
+test('apiFetchBlob throws the backend message for a missing document', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ error: 'Document not found' }, 404))
+
+  await expect(apiFetchBlob('/api/children/2/documents/9/download')).rejects.toMatchObject({
+    message: 'Document not found',
+    status: 404,
+  })
 })

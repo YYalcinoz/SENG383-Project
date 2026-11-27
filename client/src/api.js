@@ -24,36 +24,29 @@ export function setUnauthorizedHandler(handler) {
   unauthorizedHandler = handler
 }
 
-// expectUnauthorized: 401'in normal bir cevap olduğu istekler için (yanlış şifre gibi);
-// bu durumda token silinmez ve oturum bitti haberi verilmez
-export async function apiFetch(path, { method = 'GET', body, expectUnauthorized = false } = {}) {
-  const headers = {}
+// Sends a request with the token and returns the response when it is ok. Every other
+// answer becomes an ApiError. expectUnauthorized: for requests where 401 is a normal
+// answer (a wrong password, for example); then the token is kept and the session does not end.
+async function send(path, { method = 'GET', headers = {}, body, expectUnauthorized = false }) {
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   let res
   try {
-    res = await fetch(path, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    })
+    res = await fetch(path, { method, headers, body })
   } catch {
     throw new ApiError('Cannot reach the server', 0)
   }
 
-  if (res.ok) {
-    return res.status === 204 ? null : res.json()
-  }
+  if (res.ok) return res
 
   if (res.status === 401 && !expectUnauthorized) {
     clearToken()
     if (unauthorizedHandler) unauthorizedHandler()
   }
 
-  // Backend hataları her zaman JSON { error } döner; JSON değilse (ör. backend kapalıyken
-  // Vite proxy'sinin 500'ü) araya giren bir şey bozulmuştur
+  // Backend errors are always JSON { error }; anything else (for example the Vite proxy's
+  // 500 while the backend is down) means something in between is broken
   const data = await res.json().catch(() => null)
   const message =
     typeof data?.error === 'string'
@@ -62,4 +55,32 @@ export async function apiFetch(path, { method = 'GET', body, expectUnauthorized 
         ? 'Cannot reach the server'
         : `Request failed (${res.status})`
   throw new ApiError(message, res.status)
+}
+
+// A JSON request; body is sent as JSON and the JSON answer is returned
+export async function apiFetch(path, { method = 'GET', body, expectUnauthorized = false } = {}) {
+  const headers = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const res = await send(path, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    expectUnauthorized,
+  })
+  return res.status === 204 ? null : res.json()
+}
+
+// Uploads one file as multipart/form-data in the field "file" and returns the JSON answer.
+// No Content-Type is set: the browser sets it with the boundary of the form data.
+export async function apiUpload(path, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await send(path, { method: 'POST', body: form })
+  return res.json()
+}
+
+// Downloads a file and returns it as a Blob (for document downloads, which need the token)
+export async function apiFetchBlob(path) {
+  const res = await send(path, {})
+  return res.blob()
 }
