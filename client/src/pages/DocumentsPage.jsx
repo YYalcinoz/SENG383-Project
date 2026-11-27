@@ -223,9 +223,10 @@ export default function DocumentsPage() {
                   {document.uploaderName} on {formatUploadDate(document.uploadedAt)}
                 </p>
                 <div className="document-buttons">
+                  {/* The label tells screen reader users that a new tab opens */}
                   <button
                     type="button"
-                    aria-label={`Open ${document.name}`}
+                    aria-label={`Open ${document.name} in a new tab`}
                     onClick={() => openDocument(document)}
                     disabled={busyIds.has(document.id)}
                   >

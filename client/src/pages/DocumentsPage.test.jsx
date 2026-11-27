@@ -440,7 +440,7 @@ test('Open opens a new tab at once and then shows the file in it as its own type
   const open = vi.spyOn(window, 'open').mockReturnValue(tab)
   const timers = vi.spyOn(globalThis, 'setTimeout')
 
-  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf' }))
+  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf in a new tab' }))
 
   await vi.waitFor(() => expect(tab.location.href).toBe('blob:http://localhost/1234'))
   expect(open).toHaveBeenCalledWith('', '_blank')
@@ -470,19 +470,19 @@ test('the tab is opened before the file arrives, so the browser does not block i
   const tab = { opener: null, location: { href: 'about:blank' }, close: vi.fn() }
   const open = vi.spyOn(window, 'open').mockReturnValue(tab)
 
-  await user().click(screen.getByRole('button', { name: 'Open drawing.png' }))
+  await user().click(screen.getByRole('button', { name: 'Open drawing.png in a new tab' }))
 
   expect(open).toHaveBeenCalledTimes(1)
   expect(tab.location.href).toBe('about:blank')
   // Both buttons of that document are off while it loads; the others stay on
-  expect(screen.getByRole('button', { name: 'Open drawing.png' }).disabled).toBe(true)
+  expect(screen.getByRole('button', { name: 'Open drawing.png in a new tab' }).disabled).toBe(true)
   expect(screen.getByRole('button', { name: 'Download drawing.png' }).disabled).toBe(true)
-  expect(screen.getByRole('button', { name: 'Open photo.jpg' }).disabled).toBe(false)
+  expect(screen.getByRole('button', { name: 'Open photo.jpg in a new tab' }).disabled).toBe(false)
 
   finish()
   await vi.waitFor(() => expect(tab.location.href).toBe('blob:http://localhost/1234'))
   expect(createObjectURL.mock.calls[0][0].type).toBe('image/png')
-  expect(screen.getByRole('button', { name: 'Open drawing.png' }).disabled).toBe(false)
+  expect(screen.getByRole('button', { name: 'Open drawing.png in a new tab' }).disabled).toBe(false)
 })
 
 test('each document keeps its buttons off until its own file arrives, even when another one finishes first', async () => {
@@ -502,7 +502,7 @@ test('each document keeps its buttons off until its own file arrives, even when 
   // The second one finishes first; the first one is still loading and stays off
   await act(async () => drawing.release())
   await vi.waitFor(() => expect(button('Download drawing.png').disabled).toBe(false))
-  expect(button('Open school-report.pdf').disabled).toBe(true)
+  expect(button('Open school-report.pdf in a new tab').disabled).toBe(true)
   expect(button('Download school-report.pdf').disabled).toBe(true)
 
   await act(async () => report.release())
@@ -514,7 +514,7 @@ test('when pop-ups are blocked, Open downloads the file instead', async () => {
   await renderPage(PAGE, { routes: { [`GET ${API}/3/download`]: () => pdfResponse('jpg', 'image/jpeg') } })
   vi.spyOn(window, 'open').mockReturnValue(null)
 
-  await user().click(screen.getByRole('button', { name: 'Open photo.jpg' }))
+  await user().click(screen.getByRole('button', { name: 'Open photo.jpg in a new tab' }))
 
   await vi.waitFor(() => expect(anchorClicks).toHaveLength(1))
   expect(anchorClicks[0]).toEqual({ href: 'blob:http://localhost/1234', download: 'photo.jpg', inDocument: true })
@@ -528,7 +528,7 @@ test('when Open fails, the empty tab is closed and the error is shown', async ()
   const tab = { opener: null, location: { href: 'about:blank' }, close: vi.fn() }
   vi.spyOn(window, 'open').mockReturnValue(tab)
 
-  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf' }))
+  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf in a new tab' }))
 
   expect((await screen.findByRole('alert')).textContent).toBe('Document not found')
   expect(tab.close).toHaveBeenCalledTimes(1)
@@ -542,7 +542,7 @@ test('when Open fails with pop-ups blocked, only the error is shown', async () =
   })
   vi.spyOn(window, 'open').mockReturnValue(null)
 
-  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf' }))
+  await user().click(screen.getByRole('button', { name: 'Open school-report.pdf in a new tab' }))
 
   expect((await screen.findByRole('alert')).textContent).toBe('Document not found')
   expect(anchorClicks).toEqual([])
@@ -597,7 +597,7 @@ test('an upload notice is cleared when a document is opened', async () => {
   await u.click(uploadButton())
   await screen.findByText('Document uploaded: new-plan.pdf')
 
-  await u.click(screen.getByRole('button', { name: 'Open new-plan.pdf' }))
+  await u.click(screen.getByRole('button', { name: 'Open new-plan.pdf in a new tab' }))
 
   expect(screen.getByRole('status').textContent).toBe('')
 })

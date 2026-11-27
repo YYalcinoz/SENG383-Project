@@ -16,7 +16,7 @@ A web-based decision support platform that brings parents, specialists and child
 | M2 – Linking specialists | Ready | A parent links a registered specialist to their child by email and unlinks them after a confirmation step. A specialist sees the children linked to them. |
 | M3 – Weekly schedule | Ready | Parents and linked specialists see a child's week and add events. A child sees their own schedule. |
 | M4 – Tasks | Ready | Parents and linked specialists assign tasks and see their status. A child sees their own tasks and marks them as done. |
-| M5 – Specialist entries | Not started | |
+| M5 – Specialist entries | Ready | Parents and linked specialists see a child's entries. Linked specialists add entries and edit their own, which are then marked as edited. A child does not see entries. |
 | M6 – Documents | Ready | Parents and linked specialists upload PDF, PNG and JPEG files (at most 10 MB) for a child, see who uploaded each one and when, and open or download them. A child does not see documents. |
 | M7 – Weekly statistics | Not started | |
 | M8 – Role-based AI summary | Not started | |
